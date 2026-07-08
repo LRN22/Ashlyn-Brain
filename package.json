@@ -1,0 +1,11 @@
+{
+  "name": "ashlyn-brain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ashlyn Brain AI assistant for the Nichols grandkids",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {}
+}

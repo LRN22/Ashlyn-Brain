@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "ashlyn-face.png", "use": "@vercel/static" },
+    { "src": "icon.svg", "use": "@vercel/static" },
+    { "src": "manifest.json", "use": "@vercel/static" },
+    { "src": "sw.js", "use": "@vercel/static" },
+    { "src": "api/chat.js", "use": "@vercel/node" },
+    { "src": "api/web.js", "use": "@vercel/node" },
+    { "src": "api/transcribe.js", "use": "@vercel/node" },
+    { "src": "api/image.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/chat", "dest": "/api/chat.js" },
+    { "src": "/api/web", "dest": "/api/web.js" },
+    { "src": "/api/transcribe", "dest": "/api/transcribe.js" },
+    { "src": "/api/image", "dest": "/api/image.js" }
+  ]
+}
