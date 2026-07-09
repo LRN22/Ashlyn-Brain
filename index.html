@@ -212,7 +212,7 @@
 <body>
   <!-- LANDING -->
   <div id="landing">
-    <img src="ashlyn-face.png?v=simple3" alt="Moof" />
+    <img src="ashlyn-face.png?v=simple4" alt="Moof" />
     <h1>Moof</h1>
     <p>I'm Moof — Ashlyn's Brain. Tap the big button, talk, and I'll answer. Simple.</p>
     <input id="nameInput" maxlength="20" placeholder="Your name" autocomplete="nickname" />
@@ -231,12 +231,13 @@
     <div class="top">
       <button type="button" id="whoBtn">👤 <span id="whoName">Friend</span></button>
       <span class="clock" id="clock"></span>
+      <button type="button" id="startOverBtn">Start</button>
       <button type="button" id="helpBtn">Help</button>
     </div>
 
     <div class="stage">
       <div class="face-wrap idle" id="face" role="button" aria-label="Tap Moof to talk">
-        <img src="ashlyn-face.png?v=simple3" alt="Moof" />
+        <img src="ashlyn-face.png?v=simple4" alt="Moof" />
         <div class="mouth" aria-hidden="true"></div>
       </div>
       <div class="status" id="status">Tap HOLD TO TALK, then speak</div>
@@ -254,9 +255,9 @@
   <div id="openModal" aria-hidden="true">
     <div class="card">
       <h3 id="openTitle">Open site?</h3>
-      <p id="openMsg">Opens in Safari/a new tab. Moof stays here — use the app icon or this tab to come back.</p>
-      <button class="go" id="openGo" type="button">Open site</button>
-      <button class="copy" id="openCopy" type="button">Copy link (for Safari)</button>
+      <p id="openMsg">You'll leave Moof for a moment.</p>
+      <button class="go" id="openGo" type="button">Go to site</button>
+      <button class="copy" id="openCopy" type="button">Copy link</button>
       <button class="no" id="openNo" type="button">Stay with Moof</button>
     </div>
   </div>
@@ -281,6 +282,9 @@
   const IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const IS_CHROME_IOS = IS_IOS && /CriOS/i.test(UA);
   const IS_SAFARI_IOS = IS_IOS && /Safari/i.test(UA) && !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome/i.test(UA);
+  // Home Screen "Add to Home Screen" app window
+  const IS_STANDALONE = !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    !!(window.navigator && window.navigator.standalone);
   const landing = $('landing');
   const app = $('app');
   const face = $('face');
@@ -391,19 +395,66 @@
     return null;
   }
 
+  function stopAllMedia() {
+    if (recording) {
+      try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch (_) {}
+      try { cleanupStream(); } catch (_) {}
+      recording = false;
+    }
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+    busy = false;
+    if (recBtn) {
+      recBtn.disabled = false;
+      recBtn.classList.remove('hot');
+      recBtn.textContent = '🎤 Hold to Talk';
+    }
+  }
+
+  function showLandingFresh(msg) {
+    stopAllMedia();
+    hideOpen();
+    hideAwayBar();
+    // Drop in-session chat state so reopen feels like a real app restart
+    profile = null;
+    history = [];
+    leftForSite = false;
+    pendingUrl = '';
+    pendingLabel = '';
+    app.classList.remove('on');
+    landing.style.display = 'flex';
+    setFace('idle');
+    // Prefill saved name only — still require Let's Go
+    try {
+      const s = localStorage.getItem('moofProfile');
+      if (s) {
+        const p = JSON.parse(s);
+        if (p.name) $('nameInput').value = p.name;
+        if (p.ageGroup) $('ageSelect').value = p.ageGroup;
+      }
+    } catch (_) {}
+    if (msg) showToast(msg, 3000);
+  }
+
+  function hardRefreshToStart() {
+    // Full reload guarantees mic/speech state is clean (iOS freezes background PWAs)
+    try { sessionStorage.setItem('moofFreshOpen', '1'); } catch (_) {}
+    window.location.replace(window.location.pathname + window.location.search + '#');
+    window.location.reload();
+  }
+
   function showOpen(url, label) {
     pendingUrl = url;
     pendingLabel = label || 'site';
     $('openTitle').textContent = 'Open ' + pendingLabel + '?';
-    if (IS_CHROME_IOS) {
+    if (IS_STANDALONE || IS_IOS) {
       $('openMsg').textContent =
-        'You are in Chrome on iPhone. Chrome keeps websites inside Chrome — it cannot force Safari. Tip: open Moof in Safari and Add to Home Screen for best use. Or Open site (Chrome tab), or Copy link and paste in Safari.';
-    } else if (IS_IOS) {
+        'You will leave Moof to view ' + pendingLabel + '. EASY RETURN: close that site, then tap the blue Moof icon on your Home Screen. Moof will open fresh at the start page.';
+    } else if (IS_CHROME_IOS) {
       $('openMsg').textContent =
-        'Opens in a new tab/Safari. Moof stays here. Come back: Home Screen Moof icon or this tab.';
+        'Chrome will open ' + pendingLabel + '. Return by switching back to this tab, or open Moof from Safari Home Screen.';
     } else {
       $('openMsg').textContent =
-        'Opens in a new browser tab. Moof stays here — switch back to this tab anytime.';
+        'Opens ' + pendingLabel + '. Use your browser Back button, or this tab, to return.';
     }
     openModal.classList.add('on');
     openModal.setAttribute('aria-hidden', 'false');
@@ -413,9 +464,9 @@
     openModal.setAttribute('aria-hidden', 'true');
   }
   function showAwayBar(label) {
-    $('awayTitle').textContent = (label || 'Site') + ' is open';
+    $('awayTitle').textContent = (label || 'Site') + ' may still be open';
     $('awayHint').textContent =
-      "Easy way back: Home Screen \u2192 tap Moof (or return to this browser tab). Then tap I'm back.";
+      'Return: Home Screen → blue Moof icon. Moof restarts at the start page.';
     $('awayBar').classList.add('on');
   }
   function hideAwayBar() {
@@ -451,8 +502,28 @@
     }
   }
   function openExternal(url) {
-    // iOS Chrome cannot hand off to Safari from a webpage — OS restriction.
-    // Prefer a new tab/window so Moof stays loaded for easy return.
+    // Remember we left, so a Home-Screen reopen can hard-refresh to the start page.
+    try {
+      sessionStorage.setItem('moofLeftForSite', JSON.stringify({
+        url: url,
+        label: pendingLabel || 'site',
+        t: Date.now()
+      }));
+      sessionStorage.setItem('moofFreshOpen', '1');
+    } catch (_) {}
+
+    // iPhone (Safari tab OR Home Screen app):
+    // Same-window is the foolproof path.
+    // - Safari tab: top-left Back can return to Moof
+    // - Home Screen app: user taps Moof icon again → cold start at landing
+    // New tabs are confusing on iOS and often have NO return control.
+    if (IS_IOS || IS_STANDALONE) {
+      stopAllMedia();
+      window.location.assign(url);
+      return false;
+    }
+
+    // Desktop: keep Moof tab, open side tab
     let opened = null;
     try {
       opened = window.open(url, '_blank', 'noopener,noreferrer');
@@ -472,60 +543,55 @@
         opened = null;
       }
     }
-    // Absolute last resort only
     if (!opened) {
-      try { sessionStorage.setItem('moofReturn', '1'); } catch (_) {}
       window.location.assign(url);
       return false;
     }
     return true;
   }
+
   function onAppResume(reason) {
-    // iPhone freezes background tabs/apps — reset stuck listening/thinking/speaking.
-    const wasAway = leftForSite || (hiddenAt && (Date.now() - hiddenAt > 700));
-    if (recording) {
-      try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch (_) {}
-      try { cleanupStream(); } catch (_) {}
-      recording = false;
-    }
-    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
-    busy = false;
-    recBtn.disabled = false;
-    recBtn.classList.remove('hot');
-    recBtn.textContent = '🎤 Hold to Talk';
+    const awayMs = hiddenAt ? (Date.now() - hiddenAt) : 0;
+    const wasAway = leftForSite || awayMs > 1200;
+    stopAllMedia();
     hideOpen();
     setFace('idle');
     unlockSpeech();
     tickClock();
 
-    if (wasAway) {
-      leftForSite = false;
-      const who = (profile && profile.name) ? profile.name : 'there';
-      setStatus('Welcome back, ' + who + '!');
-      setReply("You're back with Moof. Hold to talk or type below.");
-      hintEl.textContent = 'Hold the big button to talk — or type below.';
-      hideAwayBar();
-      showToast('👋 Welcome back — Moof is ready', 3200);
-    } else if (profile) {
-      if (!statusEl.textContent || /Opened|Listening|Thinking|talking/i.test(statusEl.textContent)) {
-        setStatus('Hold to talk — or type below');
-      }
-    }
-
+    // If user was gone to YouTube/etc and came back, force a true refresh to the start page.
+    // This is what Home Screen icon reopen should feel like.
+    let leftMeta = null;
     try {
-      if (sessionStorage.getItem('moofReturn') === '1') {
-        sessionStorage.removeItem('moofReturn');
-        if (profile) {
-          landing.style.display = 'none';
-          app.classList.add('on');
-        }
-        showToast('👋 Back in Moof', 2800);
-      }
+      const raw = sessionStorage.getItem('moofLeftForSite');
+      if (raw) leftMeta = JSON.parse(raw);
     } catch (_) {}
 
+    if (leftMeta || wasAway) {
+      try { sessionStorage.removeItem('moofLeftForSite'); } catch (_) {}
+      leftForSite = false;
+      // Full reload once so mic/speech/UI fully reset
+      if (reason === 'visible' || reason === 'pageshow' || reason === 'bfcache' || reason === 'focus') {
+        try {
+          if (sessionStorage.getItem('moofJustReloaded') !== '1') {
+            sessionStorage.setItem('moofJustReloaded', '1');
+            hardRefreshToStart();
+            return;
+          }
+          sessionStorage.removeItem('moofJustReloaded');
+        } catch (_) {
+          hardRefreshToStart();
+          return;
+        }
+      }
+      showLandingFresh('👋 Fresh start — tap Let\'s Go');
+      return;
+    }
+
+    hideAwayBar();
+    // Soft sanity if still on main
     if (profile) {
-      landing.style.display = 'none';
-      app.classList.add('on');
+      setStatus('Hold to talk — or type below');
     }
   }
 
@@ -828,6 +894,9 @@
     setStatus('Hold the big button, talk, release. Or type below.');
     speak('Hold the big button, talk, then release. Or type your question.');
   };
+  $('startOverBtn').onclick = () => {
+    showLandingFresh('Start page');
+  };
   $('whoBtn').onclick = () => {
     const n = prompt('Name?', profile ? profile.name : '');
     if (n && n.trim()) {
@@ -862,16 +931,14 @@
     hideOpen();
     leftForSite = true;
     hiddenAt = Date.now();
-    openExternal(url);
-    setStatus('Opened ' + label + ' — come back to Moof when done');
-    if (IS_CHROME_IOS) {
-      setReply('Opened ' + label + ' in Chrome. Switch back to this Moof tab, or use Home Screen if installed.');
-      showToast('Opened in Chrome tab — Moof is still here', 2800);
-    } else {
-      setReply('Opened ' + label + '. Tap home screen Moof icon (or this tab) to return.');
-      showToast('Site opened — Moof is still here', 2600);
+    // On iOS this navigates away same-window; message is for desktop/new-tab path
+    const stayed = openExternal(url);
+    if (stayed) {
+      setStatus('Opened ' + label);
+      setReply('Opened ' + label + '. Use this Moof tab to return.');
+      showAwayBar(label);
+      showToast('Site opened in another tab', 2600);
     }
-    showAwayBar(label);
   };
   $('openCopy').onclick = async () => {
     if (!pendingUrl) return;
@@ -904,44 +971,59 @@
     onAppResume('manual');
   };
 
-  // Resume when iPhone brings Moof back from Safari / app switcher
+  // Reopen / return handling (Home Screen icon + Safari back)
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       hiddenAt = Date.now();
-      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
-      if (recording) {
-        try { stopRecord(); } catch (_) {}
-      }
+      stopAllMedia();
     } else {
-      onAppResume('visible');
+      const awayMs = hiddenAt ? (Date.now() - hiddenAt) : 0;
+      // Returning from YouTube/app switcher after real gap → full refresh to start page
+      if (awayMs > 2500 || leftForSite) {
+        onAppResume('visible');
+      } else {
+        stopAllMedia();
+        setFace('idle');
+      }
     }
   });
   window.addEventListener('pageshow', (e) => {
-    onAppResume(e.persisted ? 'bfcache' : 'pageshow');
+    // Safari back / frozen app restore
+    if (e.persisted) {
+      onAppResume('bfcache');
+      return;
+    }
+    // Normal show after history return
+    try {
+      if (sessionStorage.getItem('moofLeftForSite')) {
+        onAppResume('pageshow');
+      }
+    } catch (_) {}
   });
-  window.addEventListener('focus', () => onAppResume('focus'));
+  // Do not hard-refresh on every tiny focus flicker
+  window.addEventListener('pageshow', () => {
+    try { sessionStorage.removeItem('moofJustReloaded'); } catch (_) {}
+  });
 
-  // Prefill landing + skip to main if already used (return-from-site friendly)
+  // Always start on the start page when app opens / reopens.
+  // Prefill name only — user taps Let's Go for a clean session.
   try {
     const s = localStorage.getItem('moofProfile');
     if (s) {
       const p = JSON.parse(s);
       if (p.name) $('nameInput').value = p.name;
       if (p.ageGroup) $('ageSelect').value = p.ageGroup;
-      if (p.name) {
-        profile = { name: p.name, ageGroup: p.ageGroup || 'kid' };
-        $('whoName').textContent = profile.name;
-        landing.style.display = 'none';
-        app.classList.add('on');
-        setFace('idle');
-        setStatus('Welcome back, ' + profile.name + '!');
-        setReply(IS_CHROME_IOS
-          ? 'Moof is ready. Chrome tip: for least bugs, open Moof in Safari → Share → Add to Home Screen.'
-          : 'Moof is ready. Hold to talk or type below.');
-        hintEl.textContent = IS_CHROME_IOS
-          ? 'Chrome works. Safari Home Screen is easier for sites + mic.'
-          : 'Hold the big button while you talk, then release.';
-      }
+    }
+  } catch (_) {}
+  landing.style.display = 'flex';
+  app.classList.remove('on');
+  profile = null;
+  history = [];
+  try {
+    if (sessionStorage.getItem('moofLeftForSite') || sessionStorage.getItem('moofFreshOpen') === '1') {
+      sessionStorage.removeItem('moofLeftForSite');
+      sessionStorage.removeItem('moofFreshOpen');
+      showToast('👋 Moof restarted at start page', 2800);
     }
   } catch (_) {}
 
