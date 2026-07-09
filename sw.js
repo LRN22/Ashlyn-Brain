@@ -1,5 +1,5 @@
 // Ashlyn Brain Service Worker - offline shell + installable PWA
-const CACHE_NAME = "ashlyn-brain-v6";
+const CACHE_NAME = "ashlyn-brain-v7";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", "./icon.png", "./ashlyn-face.png"];
 
 self.addEventListener("install", (e) => {

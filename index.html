@@ -238,7 +238,7 @@
 
     <!-- Profile Setup — Moof faces the world -->
         <div class="profile-setup" id="profileSetup">
-            <img src="ashlyn-face.png?v=6" alt="Moof" class="landing-photo">
+            <img src="ashlyn-face.png?v=7" alt="Moof" class="landing-photo">
             <h1>🧠 ASHLYN'S BRAIN</h1>
             <p class="subtitle">I'm Moof — Ashlyn's Brain in a fluffy orange package. I know literally everything. Ask me anything. I dare you. 😼</p>
         <input type="text" id="nameInput" placeholder="What's your name?" maxlength="20">
@@ -266,11 +266,11 @@
 
     <!-- Moof avatar: realistic-anime face + talk bob + lip flap while speaking -->
             <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
-                <img src="ashlyn-face.png?v=6" alt="Moof">
+                <img src="ashlyn-face.png?v=7" alt="Moof">
                 <div class="moof-mouth" id="moofMouth" aria-hidden="true"></div>
             </div>
         <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
-        <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access. You can still tap Type to talk.</div>
+        <div class="voice-notice" id="voiceNotice">🎤 Mic needs one more tap on Moof after you Allow. Then talk!</div>
         <div class="status" id="statusText" style="display:none;">Tap Moof and talk!</div>
         <div class="hint" id="hintText" style="display:none;">Tap Moof and talk — or use Type</div>
 
@@ -459,49 +459,74 @@
     const MIN_SPEECH_MS = 250; // ignore tiny blips
 
     function initSpeechRecognition() {
-        voiceSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+        // MediaRecorder is available on modern iOS Safari/PWA; still allow feature probe later
+        voiceSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     }
 
     function pickRecorderMime() {
+        if (!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
         const candidates = [
-            'audio/webm;codecs=opus',
-            'audio/webm',
             'audio/mp4',
             'audio/aac',
+            'audio/mp4;codecs=mp4a.40.2',
+            'audio/webm;codecs=opus',
+            'audio/webm',
             'audio/ogg;codecs=opus'
         ];
         for (const t of candidates) {
             try {
-                if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+                if (MediaRecorder.isTypeSupported(t)) return t;
             } catch (e) {}
         }
         return '';
     }
 
+    async function requestMicStream() {
+        // iPhone: plain { audio: true } is far more reliable than constraint bags
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            throw new Error('NO_MEDIA_DEVICES');
+        }
+        try {
+            return await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e1) {
+            // Fallback with softer constraints if browser rejected plain request
+            return await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+        }
+    }
+
     async function startContinuousListening() {
-        if (!voiceSupported || isListening || isThinking || isSpeaking) return;
+        if (isListening || isThinking || isSpeaking) return;
         if (document.getElementById('chatContainer').classList.contains('active')) return;
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            setStatus('🎤 This browser has no mic access. Use Type.');
+            document.getElementById('voiceNotice').style.display = 'block';
+            return;
+        }
+        voiceSupported = true;
 
         try {
             const session = ++listenSession;
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-            });
+            mediaStream = await requestMicStream();
             audioChunks = [];
             speechDetected = false;
             silenceMs = 0;
             let speechMs = 0;
 
-            currentMimeType = pickRecorderMime() || 'audio/webm';
+            if (!window.MediaRecorder) {
+                throw new Error('NO_MEDIA_RECORDER');
+            }
+            currentMimeType = pickRecorderMime();
             try {
                 mediaRecorder = currentMimeType
                     ? new MediaRecorder(mediaStream, { mimeType: currentMimeType })
                     : new MediaRecorder(mediaStream);
-                if (mediaRecorder.mimeType) currentMimeType = mediaRecorder.mimeType;
             } catch (e) {
+                // iOS sometimes rejects mimeType; bare constructor usually works
                 mediaRecorder = new MediaRecorder(mediaStream);
-                currentMimeType = mediaRecorder.mimeType || 'audio/webm';
             }
+            currentMimeType = mediaRecorder.mimeType || currentMimeType || 'audio/mp4';
 
             mediaRecorder.ondataavailable = (e) => {
                 if (e.data && e.data.size > 0) audioChunks.push(e.data);
@@ -558,12 +583,20 @@
                 }
             }, TICK);
         } catch (e) {
-            setStatus('🎤 Microphone permission needed — use Type as backup.');
+            console.error('startContinuousListening failed', e);
+            const name = (e && (e.name || e.message)) ? String(e.name || e.message) : '';
+            const denied = /NotAllowed|Permission|Denied/i.test(name + ' ' + (e && e.message || ''));
+            const noRecorder = /NO_MEDIA_RECORDER|MediaRecorder/i.test(name + ' ' + (e && e.message || ''));
+            if (denied) {
+                setStatus('🎤 Mic is blocked. iPhone Settings → Safari → Microphone → Allow, then tap Moof.');
+            } else if (noRecorder) {
+                setStatus('🎤 Mic ok, but recording failed. Tap Moof again or use Type.');
+            } else {
+                setStatus('🎤 Mic setup glitch — tap Moof once more.');
+            }
             document.getElementById('voiceNotice').style.display = 'block';
-            // Automatically open chat fallback so kids aren't stuck
-            setTimeout(() => {
-                if (!isListening) toggleChat(true);
-            }, 800);
+            // Don't auto-open chat immediately — kids think mic failed permanently
+            // Give them a chance to tap Moof after Allow
         }
     }
 
@@ -601,15 +634,18 @@
         if (isSpeaking) {
             try { window.speechSynthesis.cancel(); } catch (e) {}
             isSpeaking = false;
+            stopMouthTalk();
             resetFace();
             return;
         }
         if (isThinking) return;
 
         if (isListening) {
-            // Manual stop: only transcribe if they actually said something
             stopContinuousListening({ reason: 'tap' });
         } else {
+            // Face tap is a user gesture — best time to (re)request mic on iPhone
+            voiceSupported = true;
+            setStatus('🎤 Starting mic...');
             startContinuousListening();
         }
     }
@@ -1054,26 +1090,29 @@
 
     // ===== PROFILE =====
     async function enableMicDefault() {
-        // Browsers require a user gesture; call this from Let's Go / Just Let Me Talk taps.
+        // Must run on a tap (Let’s Go). iOS remembers Allow after this.
         if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
             voiceSupported = false;
+            setStatus('🎤 No mic API on this browser — use Type.');
             return false;
         }
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-            });
-            // keep tracks briefly to lock permission, then stop; continuous listener restarts cleanly
+            const stream = await requestMicStream();
+            // Keep tracks open a moment so permission sticks, then stop
+            await new Promise(r => setTimeout(r, 150));
             stream.getTracks().forEach(t => t.stop());
             voiceSupported = true;
             try { localStorage.setItem('ashlynMicEnabled', '1'); } catch (e) {}
             const notice = document.getElementById('voiceNotice');
             if (notice) notice.style.display = 'none';
+            setStatus('🎤 Mic ready — talk to Moof!');
             return true;
         } catch (e) {
-            voiceSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+            console.error('enableMicDefault failed', e);
+            voiceSupported = true; // still try again later on face tap
             const notice = document.getElementById('voiceNotice');
             if (notice) notice.style.display = 'block';
+            setStatus('🎤 Tap Allow on the mic popup, then tap Moof.');
             return false;
         }
     }
