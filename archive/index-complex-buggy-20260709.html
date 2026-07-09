@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ashlyn's Brain">
+    <meta name="theme-color" content="#0a0e27">
+    <title>Ashlyn's Brain</title>
+    <link rel="apple-touch-icon" href="icon.png">
+        <link rel="icon" type="image/png" href="icon.png">
+        <link rel="icon" type="image/svg+xml" href="icon.svg">
+        <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #b8f0ff; overflow: hidden; height: 100vh; height: 100dvh; user-select: none; -webkit-font-smoothing: antialiased; }
+
+        /* ===== MOOF / ASHLYN FACE ===== */
+                        .ashlyn-face {
+                            position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
+                            width: 300px; height: 300px; cursor: pointer; z-index: 10;
+                            transition: all 0.4s ease;
+                        }
+                        .ashlyn-face img {
+                            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+                            filter: drop-shadow(0 0 25px rgba(0,212,255,0.4));
+                            transition: filter 0.3s, transform 0.2s;
+                            background: #0a0e27;
+                            display: block;
+                        }
+                        .ashlyn-face:active img { transform: scale(0.97); }
+                        .ashlyn-face.idle img { animation: float 4s ease-in-out infinite; }
+                        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+                        .listening img { filter: drop-shadow(0 0 30px rgba(255,107,0,0.7)); animation: pulse-glow 0.8s ease-in-out infinite, ear-wiggle 1.2s ease-in-out infinite; }
+                        .thinking img { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); animation: pulse-glow 1s ease-in-out infinite, think-tilt 1.4s ease-in-out infinite; }
+                        /* Talking: head bob + green glow; lips driven by JS classes */
+                        .speaking img {
+                            filter: drop-shadow(0 0 34px rgba(0,255,136,0.85));
+                            animation: talk-bob 0.28s ease-in-out infinite, pulse-glow 0.35s ease-in-out infinite;
+                        }
+                        .moof-mouth {
+                            position: absolute;
+                            left: 50%;
+                            top: 69%;
+                            width: 26%;
+                            height: 16%;
+                            transform: translate(-50%, -50%) scaleY(0.18) scaleX(1);
+                            transform-origin: 50% 30%;
+                            border-radius: 48% 48% 52% 52%;
+                            background:
+                                radial-gradient(ellipse at 50% 12%, rgba(255,150,130,0.7) 0%, transparent 40%),
+                                radial-gradient(ellipse at 50% 58%, #1a0806 0%, #0b0403 78%, #050202 100%);
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.45), inset 0 -2px 5px rgba(180,50,40,0.35);
+                            opacity: 0;
+                            pointer-events: none;
+                            z-index: 4;
+                            overflow: hidden;
+                            will-change: transform, opacity;
+                            transition: transform 70ms linear, opacity 80ms linear;
+                        }
+                        .moof-mouth::after {
+                            content: '';
+                            position: absolute;
+                            left: 50%;
+                            top: 42%;
+                            width: 50%;
+                            height: 48%;
+                            transform: translate(-50%, 0);
+                            border-radius: 40% 40% 55% 55%;
+                            background: linear-gradient(180deg, #ef6d6d 0%, #b02828 100%);
+                        }
+                        .ashlyn-face.speaking .moof-mouth { opacity: 0.98; }
+                        .ashlyn-face.speaking .moof-mouth.open {
+                            transform: translate(-50%, -50%) scaleY(1.08) scaleX(1.1);
+                        }
+                        .ashlyn-face.speaking .moof-mouth.mid {
+                            transform: translate(-50%, -50%) scaleY(0.55) scaleX(1.03);
+                        }
+                        @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.88} }
+                        @keyframes talk-bob {
+                            0%,100% { transform: translateY(0) scale(1, 1); }
+                            35% { transform: translateY(3px) scale(1.02, 0.96); }
+                            70% { transform: translateY(-4px) scale(0.99, 1.03); }
+                        }
+                        @keyframes ear-wiggle {
+                            0%,100% { transform: rotate(0deg); }
+                            25% { transform: rotate(-1.5deg); }
+                            75% { transform: rotate(1.5deg); }
+                        }
+                        @keyframes think-tilt {
+                            0%,100% { transform: rotate(0deg); }
+                            50% { transform: rotate(2deg); }
+                        }
+
+                        /* iOS-safe open website prompt (needs a real tap) */
+                        .open-site-overlay {
+                            position: fixed; inset: 0; z-index: 400;
+                            display: none; align-items: center; justify-content: center;
+                            background: rgba(4,8,20,0.84); padding: 24px;
+                        }
+                        .open-site-overlay.active { display: flex; }
+                        .open-site-card {
+                            width: min(92vw, 380px);
+                            background: #0c152e;
+                            border: 2px solid rgba(0,212,255,0.55);
+                            border-radius: 22px;
+                            padding: 22px 18px 18px;
+                            text-align: center;
+                            box-shadow: 0 0 30px rgba(0,212,255,0.25);
+                        }
+                        .open-site-card h3 { color: #f2fcff; font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+                        .open-site-card p { color: #b8f0ff; font-size: 17px; font-weight: 700; margin-bottom: 18px; line-height: 1.3; }
+                        .open-site-card .open-now {
+                            display: block; width: 100%; padding: 16px 18px; border: none; border-radius: 18px;
+                            background: #00d4ff; color: #041018; font-size: 22px; font-weight: 900; cursor: pointer; margin-bottom: 10px;
+                        }
+                        .open-site-card .open-cancel {
+                            display: block; width: 100%; padding: 12px 16px; border-radius: 16px;
+                            border: 1px solid rgba(0,212,255,0.4); background: transparent; color: #9fe9ff;
+                            font-size: 16px; font-weight: 700; cursor: pointer;
+                        }
+
+/* Reactor dot (sibling of face — styles keyed off body[data-state]) */
+        .reactor-dot {
+            position: absolute; top: 80%; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 30px; border-radius: 50%;
+            background: radial-gradient(circle, #00d4ff 0%, #0088cc 50%, transparent 80%);
+            box-shadow: 0 0 15px #00d4ff; animation: dot-pulse 2s ease-in-out infinite; z-index: 11;
+            transition: opacity 0.3s;
+        }
+        body[data-state="listening"] .reactor-dot { background: radial-gradient(circle, #ff6b00 0%, #cc5500 50%, transparent 80%); box-shadow: 0 0 15px #ff6b00; animation: dot-pulse 0.8s ease-in-out infinite; }
+        body[data-state="thinking"] .reactor-dot { background: radial-gradient(circle, #ffd700 0%, #cc9900 50%, transparent 80%); box-shadow: 0 0 15px #ffd700; }
+        body[data-state="speaking"] .reactor-dot { background: radial-gradient(circle, #00ff88 0%, #00aa55 50%, transparent 80%); box-shadow: 0 0 15px #00ff88; animation: dot-pulse 0.3s ease-in-out infinite; }
+        @keyframes dot-pulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.8} 50%{transform:translateX(-50%) scale(1.2);opacity:1} }
+
+        /* ===== STATUS ===== */
+                .status {
+                    position: absolute; top: 66%; left: 50%; transform: translateX(-50%);
+                    font-size: 24px; font-weight: 800; line-height: 1.25;
+                    text-align: center; color: #f2fcff;
+                    text-shadow: 0 0 12px rgba(0,212,255,0.55), 0 2px 8px rgba(0,0,0,0.85);
+                    white-space: normal; z-index: 10; padding: 0 18px; max-width: 92vw;
+                    letter-spacing: 0.01em;
+                }
+                .hint {
+                    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+                    font-size: 18px; font-weight: 700; line-height: 1.3;
+                    color: #9fe9ff; text-align: center; z-index: 10;
+                    text-shadow: 0 1px 6px rgba(0,0,0,0.75); max-width: 92vw; padding: 0 12px;
+                }
+
+                /* ===== TOP BAR ===== */
+                .top-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; z-index: 50; }
+                .top-bar button {
+                    background: rgba(0,212,255,0.18); border: 1px solid rgba(0,212,255,0.55);
+                    color: #f0fbff; padding: 10px 16px; border-radius: 22px;
+                    font-size: 17px; font-weight: 800; cursor: pointer;
+                }
+                .clock { color: #e8fbff; font-size: 17px; font-weight: 700; opacity: 0.95; }
+
+                /* ===== CHAT ===== */
+                .chat-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,39,0.97); display: none; flex-direction: column; z-index: 100; }
+                .chat-container.active { display: flex; }
+                .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; background: rgba(0,212,255,0.12); border-bottom: 1px solid rgba(0,212,255,0.35); }
+                .chat-header h2 { color: #f2fcff; font-size: 22px; font-weight: 800; }
+                .chat-close { background: none; border: none; color: #f2fcff; font-size: 30px; font-weight: 700; cursor: pointer; padding: 5px 10px; }
+                .chat-messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+                .message {
+                    max-width: 90%; padding: 14px 18px; border-radius: 18px;
+                    font-size: 20px; font-weight: 700; line-height: 1.4; word-wrap: break-word;
+                }
+                .message.user { align-self: flex-end; background: #00d4ff; color: #041018; font-weight: 800; }
+                .message.ashlyn { align-self: flex-start; background: rgba(0,212,255,0.16); border: 1px solid rgba(0,212,255,0.4); color: #f2fcff; }
+                .chat-input-area { display: flex; padding: 14px; gap: 10px; background: rgba(0,0,0,0.4); border-top: 1px solid rgba(0,212,255,0.25); }
+                .chat-input {
+                    flex: 1; padding: 14px 18px; border-radius: 25px;
+                    border: 1px solid rgba(0,212,255,0.5); background: rgba(0,0,0,0.45);
+                    color: #fff; font-size: 19px; font-weight: 600; outline: none;
+                }
+                .chat-send {
+                    width: 52px; height: 52px; border-radius: 50%; border: none;
+                    background: #00d4ff; color: #041018; font-size: 22px; font-weight: 800;
+                    cursor: pointer; display: flex; align-items: center; justify-content: center;
+                }
+                .chat-messages::-webkit-scrollbar { width: 4px; }
+                .chat-messages::-webkit-scrollbar-track { background: transparent; }
+                .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.35); border-radius: 2px; }
+
+                /* ===== PROFILE SETUP ===== */
+                .profile-setup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0e27; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; z-index: 200; overflow-y: auto; }
+                .landing-photo { width: 132px; height: 132px; border-radius: 50%; object-fit: cover; border: 3px solid #00d4ff; box-shadow: 0 0 30px rgba(0,212,255,0.45); margin-bottom: 14px; }
+                .profile-setup h1 {
+                    color: #f2fcff; font-size: 34px; font-weight: 900; margin-bottom: 8px;
+                    text-shadow: 0 0 18px rgba(0,212,255,0.55); letter-spacing: 0.02em;
+                }
+                .profile-setup .subtitle {
+                    color: #d7f7ff; font-size: 18px; font-weight: 700; line-height: 1.35;
+                    margin-bottom: 22px; text-align: center; max-width: 360px;
+                }
+                .profile-setup input {
+                    width: 100%; max-width: 340px; padding: 16px 20px; border-radius: 25px;
+                    border: 1px solid rgba(0,212,255,0.5); background: rgba(0,0,0,0.45);
+                    color: #fff; font-size: 20px; font-weight: 700; outline: none; text-align: center; margin-bottom: 14px;
+                }
+                .profile-setup select {
+                    width: 100%; max-width: 340px; padding: 16px 20px; border-radius: 25px;
+                    border: 1px solid rgba(0,212,255,0.5); background: rgba(0,0,0,0.45);
+                    color: #fff; font-size: 19px; font-weight: 700; outline: none; margin-bottom: 18px;
+                }
+                .profile-setup button {
+                    padding: 16px 42px; border-radius: 25px; border: none; background: #00d4ff;
+                    color: #041018; font-size: 22px; font-weight: 900; cursor: pointer;
+                }
+                .tap-through {
+                    margin-top: 18px; padding: 18px 42px; border-radius: 25px;
+                    border: 2px solid rgba(255,107,200,0.6); background: rgba(255,107,200,0.16);
+                    color: #ffd0ef; font-size: 24px; font-weight: 900; cursor: pointer;
+                    display: flex; flex-direction: column; align-items: center; gap: 4px;
+                }
+                .tap-through .emoji { font-size: 42px; }
+                .tap-through-sub { font-size: 15px; color: #ffc2e8; font-weight: 700; }
+
+                .voice-notice {
+                    position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
+                    background: rgba(255,107,0,0.18); border: 1px solid rgba(255,107,0,0.55);
+                    color: #ffd0b0; padding: 12px 18px; border-radius: 16px;
+                    font-size: 17px; font-weight: 800; text-align: center; display: none;
+                    z-index: 10; max-width: 320px; line-height: 1.3;
+                }
+
+                .big-button-mode .ashlyn-face { width: 360px; height: 360px; }
+                .big-button-mode .status { font-size: 28px; font-weight: 900; top: 74%; }
+                .big-button-mode .hint { font-size: 20px; font-weight: 800; }
+    </style>
+</head>
+<body data-state="idle">
+
+    <!-- Profile Setup — Moof faces the world -->
+        <div class="profile-setup" id="profileSetup">
+            <img src="ashlyn-face.png?v=7" alt="Moof" class="landing-photo">
+            <h1>🧠 ASHLYN'S BRAIN</h1>
+            <p class="subtitle">I'm Moof — Ashlyn's Brain in a fluffy orange package. I know literally everything. Ask me anything. I dare you. 😼</p>
+        <input type="text" id="nameInput" placeholder="What's your name?" maxlength="20">
+        <select id="ageSelect">
+            <option value="">How old are you?</option>
+            <option value="little">3-7 years old</option>
+            <option value="kid">8-12 years old</option>
+            <option value="teen">13-17 years old</option>
+            <option value="adult">18+ years old</option>
+        </select>
+        <button onclick="saveProfile()">Let's Go! 🚀</button>
+        <button class="tap-through" onclick="saveProfileTap()">
+            <span class="emoji">🌈</span>
+            <span>Just Let Me Talk!</span>
+            <span class="tap-through-sub">(for our youngest family members)</span>
+        </button>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar" id="topBar" style="display:none;">
+        <button onclick="showProfile()">👤 <span id="profileName"></span></button>
+        <span class="clock" id="clock"></span>
+        <button onclick="toggleChat()" id="typeBtn">⌨️ Type</button>
+    </div>
+
+    <!-- Moof avatar: realistic-anime face + talk bob + lip flap while speaking -->
+            <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
+                <img src="ashlyn-face.png?v=7" alt="Moof">
+                <div class="moof-mouth" id="moofMouth" aria-hidden="true"></div>
+            </div>
+        <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
+        <div class="voice-notice" id="voiceNotice">🎤 Mic needs one more tap on Moof after you Allow. Then talk!</div>
+        <div class="status" id="statusText" style="display:none;">Tap Moof and talk!</div>
+        <div class="hint" id="hintText" style="display:none;">Tap Moof and talk — or use Type</div>
+
+    <!-- Tap-to-open websites (iPhone blocks popup without a tap) -->
+    <div class="open-site-overlay" id="openSiteOverlay">
+        <div class="open-site-card">
+            <h3 id="openSiteTitle">Open website</h3>
+            <p id="openSiteMsg">Tap the button to open it.</p>
+            <button class="open-now" id="openSiteBtn" type="button">Open now</button>
+            <button class="open-cancel" id="openSiteCancel" type="button">Not now</button>
+        </div>
+    </div>
+
+    <!-- Chat (text fallback) -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h2>🧠 Ashlyn's Brain</h2>
+            <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type to Ashlyn..." onkeypress="if(event.key==='Enter') sendTextMessage()">
+            <button class="chat-send" onclick="sendTextMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+    const CONFIG = {
+        apiEndpoint: '/api/chat',
+        webEndpoint: '/api/web',
+        // Shared protocol instructions for tools
+        toolRules:
+            'TOOLS (only when truly needed):\n' +
+            '- Weather questions: answer from any weather data already provided. Do not request web search for weather.\n' +
+            '- For other facts you do not know: include exactly one line WEB_SEARCH: <short query> and nothing else important after it.\n' +
+            '- If they ask you to draw/create a picture: include DRAW_IMAGE: <detailed kid-safe description>.\n' +
+            '- Sites open themselves in the app from the user\'s words — do not invent OPEN_WEB lines.\n' +
+            'Kid-safe only. No adult, violent, or scary content or images.',
+        systemPrompts: {
+                    little: 'You are Moof, Ashlyn\'s Brain as a friendly orange tabby cat, talking for a young child (3-7). Be gentle, warm, and encouraging. RULE: Reply in 1 short sentence max. Very simple words. Never scary, never mean, never teasing, and never call their question silly.',
+                    kid: 'You are Moof, Ashlyn\'s Brain as a playful orange tabby cat, talking for a child (8-12). Be playful but kind. RULE: Reply in 1-2 short sentences. Kid-safe, gentle, and never call their question silly.',
+                    teen: 'You are Moof, Ashlyn\'s Brain as a snarky orange tabby cat for a teenager (13-17). Witty and sarcastic. RULE: Reply in 2 short sentences max.',
+                    adult: 'You are Moof, Ashlyn\'s Brain as a snarky orange tabby cat AI. Snarky playful assistant. RULE: Reply in 2 short sentences max. You have web search, weather, and image generation.'
+                }
+    };
+
+    // ===== STATE =====
+    let profile = null, isListening = false, isThinking = false, isSpeaking = false;
+    let conversationHistory = [], mediaRecorder = null, audioChunks = [], mediaStream = null, voiceSupported = false;
+    let pendingOpenUrl = null, pendingOpenLabel = '';
+    let currentMimeType = 'audio/webm';
+    let speechDetected = false;
+    let silenceMs = 0;
+    let listenSession = 0; // ignore late onstop from earlier sessions
+
+    const KNOWN_SITES = {
+        'youtube':'youtube.com','you tube':'youtube.com','utube':'youtube.com','youtub':'youtube.com',
+        'google':'google.com','goggle':'google.com','gogle':'google.com','googol':'google.com','gmail':'gmail.com',
+        'facebook':'facebook.com','instagram':'instagram.com','twitter':'x.com','x':'x.com',
+        'amazon':'amazon.com','netflix':'netflix.com','disney':'disneyplus.com','disney plus':'disneyplus.com',
+        'walmart':'walmart.com','target':'target.com','ebay':'ebay.com','chatgpt':'chatgpt.com',
+        'claude':'claude.ai','groq':'groq.com','vercel':'vercel.com',
+        'gridplan':'gridplan.app','scheduleverify':'scheduleverify.com',
+        'ashlyn':'ashlyn-brain.xyz','ashlyn brain':'ashlyn-brain.xyz',
+        'github':'github.com','reddit':'reddit.com','pinterest':'pinterest.com',
+        'tiktok':'tiktok.com','linkedin':'linkedin.com','spotify':'spotify.com',
+        'zoom':'zoom.us','weather':'weather.com','wikipedia':'wikipedia.org',
+        'imdb':'imdb.com','etsy':'etsy.com','shopify':'shopify.com',
+        'zillow':'zillow.com','airbnb':'airbnb.com','uber':'uber.com',
+        'nasa':'nasa.gov','espn':'espn.com','cnn':'cnn.com','bbc':'bbc.com',
+        'best buy':'bestbuy.com','bestbuy':'bestbuy.com'
+    };
+
+    // ===== SPEECH OUTPUT =====
+    let speechUnlocked = false;
+
+    function unlockSpeech() {
+        if (!window.speechSynthesis || speechUnlocked) return;
+        speechUnlocked = true;
+        try {
+            window.speechSynthesis.resume();
+            const ping = new SpeechSynthesisUtterance('');
+            ping.volume = 0;
+            window.speechSynthesis.speak(ping);
+        } catch (e) {}
+    }
+
+    let mouthTimer = null;
+    let mouthPhase = 0;
+
+    function stopMouthTalk() {
+        if (mouthTimer) {
+            clearInterval(mouthTimer);
+            mouthTimer = null;
+        }
+        mouthPhase = 0;
+        const mouth = document.getElementById('moofMouth');
+        if (mouth) {
+            mouth.classList.remove('open', 'mid');
+            mouth.style.opacity = '0';
+        }
+    }
+
+    function startMouthTalk() {
+        const mouth = document.getElementById('moofMouth');
+        if (!mouth) return;
+        stopMouthTalk();
+        mouth.style.opacity = '0.98';
+        // Explicit class toggling (more reliable than CSS keyframes on iOS)
+        mouthTimer = setInterval(() => {
+            mouthPhase = (mouthPhase + 1) % 4;
+            mouth.classList.remove('open', 'mid');
+            if (mouthPhase === 1) mouth.classList.add('mid');
+            else if (mouthPhase === 2) mouth.classList.add('open');
+            else if (mouthPhase === 3) mouth.classList.add('mid');
+            // 0 = nearly closed (base transform)
+        }, 120);
+    }
+
+    function setFaceState(state) {
+        document.body.setAttribute('data-state', state);
+        const face = document.getElementById('ashlynFace');
+        if (face && face.style.display !== 'none') {
+            face.className = 'ashlyn-face ' + state;
+        }
+        if (state === 'speaking') startMouthTalk();
+        else stopMouthTalk();
+    }
+
+    function speak(text) {
+        if (!window.speechSynthesis || !text) return;
+        const age = (profile && profile.ageGroup) ? profile.ageGroup : 'little';
+
+        try { window.speechSynthesis.resume(); } catch (e) {}
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = age === 'little' ? 0.9 : 1.0;
+        u.pitch = 1.35;
+        u.volume = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const v = voices.find(v => v.name.includes('Samantha')) ||
+                  voices.find(v => v.name.includes('Karen')) ||
+                  voices.find(v => v.name.includes('Moira')) ||
+                  voices.find(v => v.name.includes('Tessa')) ||
+                  voices.find(v => v.name.includes('Zoe')) ||
+                  voices.find(v => v.name.includes('Google UK English Female')) ||
+                  voices.find(v => v.name.includes('Female') && v.lang === 'en-US') ||
+                  voices.find(v => v.name.includes('Google') && v.lang === 'en-US') ||
+                  voices.find(v => v.lang === 'en-US');
+        if (v) u.voice = v;
+
+        const beginTalking = () => {
+            if (isSpeaking) return;
+            isSpeaking = true;
+            setFaceState('speaking');
+            setStatus('🎙️ Moof is talking...');
+        };
+        const endTalking = () => {
+            isSpeaking = false;
+            stopMouthTalk();
+            resetFace();
+        };
+
+        u.onstart = beginTalking;
+        u.onend = endTalking;
+        u.onerror = endTalking;
+
+        // iOS Safari often never fires onstart — force speaking/lips immediately
+        beginTalking();
+        try { window.speechSynthesis.speak(u); } catch (e) { endTalking(); }
+
+        // Fallback end if onend is dropped (some WebViews)
+        const estMs = Math.max(1800, Math.min(12000, (text.length / 12) * 1000));
+        setTimeout(() => {
+            if (isSpeaking && !window.speechSynthesis.speaking) endTalking();
+        }, estMs + 800);
+    }
+
+    // ===== CONTINUOUS LISTENING =====
+    let audioContext = null, analyser = null, silenceTimer = null;
+    const SILENCE_THRESHOLD = 10; // slightly less jumpy than 8
+    const SILENCE_DURATION = 2000; // require ~2s quiet after speech before cutover
+    const MIN_SPEECH_MS = 250; // ignore tiny blips
+
+    function initSpeechRecognition() {
+        // MediaRecorder is available on modern iOS Safari/PWA; still allow feature probe later
+        voiceSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    }
+
+    function pickRecorderMime() {
+        if (!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
+        const candidates = [
+            'audio/mp4',
+            'audio/aac',
+            'audio/mp4;codecs=mp4a.40.2',
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus'
+        ];
+        for (const t of candidates) {
+            try {
+                if (MediaRecorder.isTypeSupported(t)) return t;
+            } catch (e) {}
+        }
+        return '';
+    }
+
+    async function requestMicStream() {
+        // iPhone: plain { audio: true } is far more reliable than constraint bags
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            throw new Error('NO_MEDIA_DEVICES');
+        }
+        try {
+            return await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e1) {
+            // Fallback with softer constraints if browser rejected plain request
+            return await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+        }
+    }
+
+    async function startContinuousListening() {
+        if (isListening || isThinking || isSpeaking) return;
+        if (document.getElementById('chatContainer').classList.contains('active')) return;
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            setStatus('🎤 This browser has no mic access. Use Type.');
+            document.getElementById('voiceNotice').style.display = 'block';
+            return;
+        }
+        voiceSupported = true;
+
+        try {
+            const session = ++listenSession;
+            mediaStream = await requestMicStream();
+            audioChunks = [];
+            speechDetected = false;
+            silenceMs = 0;
+            let speechMs = 0;
+
+            if (!window.MediaRecorder) {
+                throw new Error('NO_MEDIA_RECORDER');
+            }
+            currentMimeType = pickRecorderMime();
+            try {
+                mediaRecorder = currentMimeType
+                    ? new MediaRecorder(mediaStream, { mimeType: currentMimeType })
+                    : new MediaRecorder(mediaStream);
+            } catch (e) {
+                // iOS sometimes rejects mimeType; bare constructor usually works
+                mediaRecorder = new MediaRecorder(mediaStream);
+            }
+            currentMimeType = mediaRecorder.mimeType || currentMimeType || 'audio/mp4';
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) audioChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+                // Drop late events after a newer listen session started
+                if (session !== listenSession) return;
+                const type = currentMimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunks, { type });
+                if (speechDetected && audioBlob.size > 1200) {
+                    transcribeAudio(audioBlob);
+                } else {
+                    setTimeout(() => startContinuousListening(), 350);
+                }
+            };
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                try { await audioContext.resume(); } catch (e) {}
+            }
+            const source = audioContext.createMediaStreamSource(mediaStream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+
+            mediaRecorder.start(250);
+            isListening = true;
+            setFaceState('listening');
+            setStatus('🎙️ Listening... just talk!');
+            document.getElementById('voiceNotice').style.display = 'none';
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const TICK = 200;
+            silenceTimer = setInterval(() => {
+                if (!isListening || session !== listenSession) return;
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                const avg = sum / dataArray.length;
+
+                if (avg > SILENCE_THRESHOLD) {
+                    speechMs += TICK;
+                    if (speechMs >= MIN_SPEECH_MS) {
+                        speechDetected = true;
+                        silenceMs = 0;
+                    }
+                } else if (speechDetected) {
+                    silenceMs += TICK;
+                    if (silenceMs >= SILENCE_DURATION) {
+                        stopContinuousListening({ reason: 'silence' });
+                    }
+                } else {
+                    speechMs = 0;
+                }
+            }, TICK);
+        } catch (e) {
+            console.error('startContinuousListening failed', e);
+            const name = (e && (e.name || e.message)) ? String(e.name || e.message) : '';
+            const denied = /NotAllowed|Permission|Denied/i.test(name + ' ' + (e && e.message || ''));
+            const noRecorder = /NO_MEDIA_RECORDER|MediaRecorder/i.test(name + ' ' + (e && e.message || ''));
+            if (denied) {
+                setStatus('🎤 Mic is blocked. iPhone Settings → Safari → Microphone → Allow, then tap Moof.');
+            } else if (noRecorder) {
+                setStatus('🎤 Mic ok, but recording failed. Tap Moof again or use Type.');
+            } else {
+                setStatus('🎤 Mic setup glitch — tap Moof once more.');
+            }
+            document.getElementById('voiceNotice').style.display = 'block';
+            // Don't auto-open chat immediately — kids think mic failed permanently
+            // Give them a chance to tap Moof after Allow
+        }
+    }
+
+    function stopContinuousListening(opts) {
+        opts = opts || {};
+        if (silenceTimer) { clearInterval(silenceTimer); silenceTimer = null; }
+        const hadSpeech = speechDetected;
+        const wasListening = isListening;
+        isListening = false;
+
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            try { mediaRecorder.stop(); } catch (e) {}
+        } else if (!hadSpeech && wasListening) {
+            setTimeout(() => startContinuousListening(), 300);
+        }
+
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(t => t.stop());
+            mediaStream = null;
+        }
+        if (audioContext) {
+            try { audioContext.close(); } catch (e) {}
+            audioContext = null;
+        }
+
+        if (hadSpeech) {
+            setFaceState('thinking');
+            setStatus('📝 Got it! Thinking...');
+        }
+    }
+
+    // Tap face = stop speaking, stop/start listening
+    async function toggleListening() {
+        unlockSpeech();
+        if (isSpeaking) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            isSpeaking = false;
+            stopMouthTalk();
+            resetFace();
+            return;
+        }
+        if (isThinking) return;
+
+        if (isListening) {
+            stopContinuousListening({ reason: 'tap' });
+        } else {
+            // Face tap is a user gesture — best time to (re)request mic on iPhone
+            voiceSupported = true;
+            setStatus('🎤 Starting mic...');
+            startContinuousListening();
+        }
+    }
+
+    async function transcribeAudio(audioBlob) {
+        try {
+            isThinking = true;
+            setFaceState('thinking');
+            const response = await fetch('/api/transcribe', {
+                method: 'POST',
+                headers: { 'Content-Type': audioBlob.type || currentMimeType || 'audio/webm' },
+                body: audioBlob
+            });
+            if (!response.ok) throw new Error('Transcription failed');
+            const data = await response.json();
+            const text = (data.text || '').trim();
+            if (text) {
+                handleUserMessage(text);
+            } else {
+                isThinking = false;
+                setStatus('Didn\'t catch that — try again.');
+                setFaceState('idle');
+                setTimeout(() => startContinuousListening(), 500);
+            }
+        } catch (error) {
+            isThinking = false;
+            setStatus('Couldn\'t hear that. Restarting...');
+            setFaceState('idle');
+            setTimeout(() => startContinuousListening(), 1000);
+        }
+    }
+
+    // ===== MESSAGE HANDLING =====
+    function normalizeSpeech(text) {
+        return (text || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[?.!,]+$/g, '')
+            .replace(/\bapp\b/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function detectMentionedSite(text) {
+        const lower = normalizeSpeech(text);
+        if (!lower) return null;
+
+        const keys = Object.keys(KNOWN_SITES).sort((a, b) => b.length - a.length);
+        for (const key of keys) {
+            if (key.length <= 2) {
+                if (lower.split(/\s+/).includes(key)) {
+                    return { key, url: 'https://' + KNOWN_SITES[key] };
+                }
+            } else if (lower.includes(key)) {
+                return { key, url: 'https://' + KNOWN_SITES[key] };
+            }
+        }
+        return null;
+    }
+
+    function looksLikeSiteOnlyUtterance(text) {
+        const lower = normalizeSpeech(text);
+        if (!lower) return false;
+        const words = lower.split(/\s+/);
+        if (words.length > 3) return false;
+        const questionWords = ['what', 'why', 'how', 'who', 'when', 'where', 'tell'];
+        if (questionWords.some(w => words.includes(w))) return false;
+        return !!detectMentionedSite(lower);
+    }
+
+    function handleUserMessage(text) {
+        if (!text || !text.trim()) return;
+        addMessage('user', text);
+
+        const lower = normalizeSpeech(text);
+
+        // Resolve open-website confirmation
+        if (pendingOpenUrl) {
+            const yesWords = ['yes', 'yeah', 'yep', 'open it', 'do it', 'sure', 'ok', 'okay', 'please'];
+            const noWords = ['no', 'nope', 'cancel', 'stop', 'not now'];
+            if (yesWords.some(w => lower === w || lower.includes(w))) {
+                const url = pendingOpenUrl;
+                pendingOpenUrl = null; pendingOpenLabel = '';
+                openWebView(url);
+                return;
+            }
+            if (noWords.some(w => lower === w || lower.includes(w))) {
+                pendingOpenUrl = null; pendingOpenLabel = '';
+                const msg = 'Okay, I will not open it.';
+                addMessage('ashlyn', msg); speak(msg);
+                return;
+            }
+            const ask = 'Do you want me to open ' + pendingOpenLabel + '? Say yes or no.';
+            addMessage('ashlyn', ask); speak(ask);
+            return;
+        }
+
+        const cmd = detectOpenCommand(text);
+        if (cmd) {
+            openWebView(cmd);
+            return;
+        }
+
+        if (looksLikeSiteOnlyUtterance(text)) {
+            const m = detectMentionedSite(text);
+            if (m) {
+                openWebView(m.url);
+                return;
+            }
+        }
+
+        conversationHistory.push({ role: 'user', content: text });
+        if (conversationHistory.length > 6) conversationHistory = conversationHistory.slice(-6);
+        isThinking = true;
+        setFaceState('thinking');
+        setStatus('🤔 Moof is thinking...');
+        callAI(text);
+    }
+
+    function detectOpenCommand(text) {
+        const lower = normalizeSpeech(text);
+        if (!lower) return null;
+
+        // loose intent: open youtube / go to google / take me to netflix / watch youtube etc.
+        const intentRe = /\b(open|go to|go|take me to|take me|show me|visit|launch|start|play|watch|pull up|bring up)\b/;
+        const hasOpenIntent = intentRe.test(lower);
+        const m = detectMentionedSite(lower);
+
+        if (hasOpenIntent && m) return m.url;
+
+        const match = lower.match(/^(?:can you\s+|please\s+|ashlyn\s+|moof\s+)?(?:open|go to|go|take me to|show me|visit|launch|start|play|watch|pull up|bring up)\b\s+(.+)/);
+        if (!match) return null;
+
+        let site = match[1].trim().replace(/[?.!,]+$/g, '').replace(/^(the|my|a|an)\s+/i, '');
+        site = site.replace(/\s+(for me|please)$/i, '').replace(/\bapp\b/gi, '').trim();
+
+        // fuzzy map known keys contained in the freeform remaining text
+        const mentioned = detectMentionedSite(site) || detectMentionedSite(lower);
+        if (mentioned) return mentioned.url;
+        if (KNOWN_SITES[site]) return 'https://' + KNOWN_SITES[site];
+        if (site.includes('.')) return site.startsWith('http') ? site : 'https://' + site.replace(/\s+/g, '');
+        return null;
+    }
+
+    // ===== CALL AI =====
+    async function callAI(userText) {
+        const sysBase = CONFIG.systemPrompts[profile.ageGroup] || CONFIG.systemPrompts.adult;
+        const now = new Date();
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+        const offset = -now.getTimezoneOffset() / 60;
+        const offsetStr = offset >= 0 ? 'UTC+' + offset : 'UTC' + offset;
+        const timeCtx = 'Current date/time: ' + now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) +
+            ' at ' + now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) +
+            '. User timezone: ' + tz + ' (' + offsetStr +
+            '). User is in Beaumont, Texas, USA (Southeast Texas, near Houston/Gulf Coast). Use Beaumont, Texas for weather and local info.';
+
+        const weatherWords = ['weather','temperature','forecast','rain','sunny','cloud','hot','cold','tonight','tomorrow','humidity','wind'];
+        const isWeather = weatherWords.some(w => userText.toLowerCase().includes(w));
+
+        let webContext = '';
+        if (isWeather) {
+            setStatus('🌤️ Checking Texas weather...');
+            try {
+                const webRes = await fetch(CONFIG.webEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: 'weather Beaumont Texas' })
+                });
+                if (webRes.ok) {
+                    const webData = await webRes.json();
+                    if (webData.summary) webContext = '\n\nReal-time weather data:\n' + webData.summary;
+                }
+            } catch (e) {}
+        }
+
+        const toneRule = (profile.ageGroup === 'little' || profile.ageGroup === 'kid')
+            ? 'Be gentle and kind. Never label their question as silly. Always try to help. Keep it very short.'
+            : 'Be snarky and playful. Keep it short.';
+        const sysFull = sysBase + '\n\n' + timeCtx + webContext + '\n\n' + toneRule +
+            ' Max 2 very short sentences (~30 words).\n\n' + CONFIG.toolRules +
+            '\n\nUser name: ' + profile.name;
+
+        const messages = [{ role: 'system', content: sysFull }, ...conversationHistory];
+
+        try {
+            const response = await fetch(CONFIG.apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages })
+            });
+            if (!response.ok) throw new Error('API error');
+            const data = await response.json();
+            let reply = data.reply || "I didn't catch that!";
+
+            // Non-weather web search requested by model
+            if (reply.includes('WEB_SEARCH:')) {
+                const m = reply.match(/WEB_SEARCH:\s*(.+)/);
+                if (m) {
+                    const query = m[1].trim().replace(/\n[\s\S]*/, '');
+                    reply = reply.replace(/WEB_SEARCH:.*$/s, '').trim();
+                    if (reply) addMessage('ashlyn', reply);
+                    setStatus('🔍 Searching: ' + query + '...');
+                    try {
+                        const webRes = await fetch(CONFIG.webEndpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query })
+                        });
+                        if (webRes.ok) {
+                            const webData = await webRes.json();
+                            const summary = (webData.summary || '').trim();
+                            if (summary) {
+                                // One short natural sentence for voice
+                                const first = summary.split(/(?<=[.!?])\s+/)[0];
+                                reply = first && first.length > 10 ? first : summary.slice(0, 180);
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            // Ignore any leftover OPEN_WEB model tokens — we open from user speech instead
+            if (reply.includes('OPEN_WEB:')) {
+                reply = reply.replace(/OPEN_WEB:.*$/s, '').trim();
+            }
+
+            // Draw image if requested
+            if (reply.includes('DRAW_IMAGE:')) {
+                const m = reply.match(/DRAW_IMAGE:\s*(.+)/);
+                if (m) {
+                    const imgPrompt = m[1].trim().replace(/\n[\s\S]*/, '');
+                    reply = reply.replace(/DRAW_IMAGE:.*$/s, '').trim();
+                    if (reply) {
+                        addMessage('ashlyn', reply);
+                        if (!reply.includes('picture') && !reply.includes('Drawing')) {
+                            // still speak the short intro if present
+                        }
+                    } else {
+                        reply = 'Drawing that for you!';
+                        addMessage('ashlyn', reply);
+                    }
+                    setStatus('🎨 Drawing: ' + imgPrompt.substring(0, 40) + '...');
+                    speak(reply || 'Here is your picture!');
+                    try {
+                        const imgRes = await fetch('/api/image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ prompt: imgPrompt })
+                        });
+                        if (imgRes.ok) {
+                            const imgData = await imgRes.json();
+                            if (imgData.url) {
+                                addImageMessage(imgData.url, imgData.prompt || imgPrompt);
+                                // ensure chat is visible so they can see the picture
+                                toggleChat(true);
+                                if (!isSpeaking) speak('Here is your picture!');
+                            } else {
+                                const fail = "I couldn't draw that one. Try again!";
+                                addMessage('ashlyn', fail);
+                                if (!isSpeaking) speak(fail);
+                            }
+                        }
+                    } catch (e) {
+                        const fail = "I couldn't draw that one. Try again!";
+                        addMessage('ashlyn', fail);
+                        if (!isSpeaking) speak(fail);
+                    }
+                    conversationHistory.push({ role: 'assistant', content: (reply || 'Drew a picture.') + ' [image: ' + imgPrompt + ']' });
+                    isThinking = false;
+                    // Don't resetFace while speaking — onend will
+                    if (!isSpeaking) resetFace();
+                    return;
+                }
+            }
+
+            conversationHistory.push({ role: 'assistant', content: reply });
+            addMessage('ashlyn', reply);
+            isThinking = false;
+            speak(reply);
+        } catch (error) {
+            isThinking = false;
+            const fb = ["Hi! I'm here. Try again!", "Oops, brain trouble. Try again!", "Didn't catch that!"][Math.floor(Math.random() * 3)];
+            addMessage('ashlyn', fb);
+            speak(fb);
+            setStatus('Tap Ashlyn to talk');
+            setFaceState('idle');
+        }
+    }
+
+    // ===== OPEN WEBSITES (new tab — never iframe) =====
+    function resumeListeningSoon(delay) {
+        delay = typeof delay === 'number' ? delay : 450;
+        if (!voiceSupported || isSpeaking || isThinking || isListening) return;
+        if (document.getElementById('chatContainer').classList.contains('active')) return;
+        setTimeout(() => {
+            if (!document.hidden && !isSpeaking && !isThinking && !isListening) {
+                if (!document.getElementById('chatContainer').classList.contains('active')) {
+                    startContinuousListening();
+                }
+            }
+        }, delay);
+    }
+
+    function hideOpenSiteOverlay() {
+        const overlay = document.getElementById('openSiteOverlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    function openWebView(url) {
+        if (!url) return;
+        if (isListening) stopContinuousListening({ reason: 'open-web' });
+
+        let safeUrl = url;
+        if (!/^https?:\/\//i.test(safeUrl)) safeUrl = 'https://' + safeUrl;
+        const host = safeUrl.replace(/^https?:\/\//i, '').split('/')[0].toLowerCase() || safeUrl;
+
+        // Immediate try (works if still considered a user-gesture path)
+        let opened = null;
+        try { opened = window.open(safeUrl, '_blank', 'noopener,noreferrer'); } catch (e) { opened = null; }
+
+        if (opened) {
+            setStatus('🌐 Opened ' + host);
+            addMessage('ashlyn', 'Opened ' + host + '.');
+            speak('Opened!');
+            setFaceState('idle');
+            resumeListeningSoon(900);
+            return;
+        }
+
+        // iPhone / popup blockers: require an explicit tap
+        const overlay = document.getElementById('openSiteOverlay');
+        const title = document.getElementById('openSiteTitle');
+        const msg = document.getElementById('openSiteMsg');
+        const btn = document.getElementById('openSiteBtn');
+        const cancel = document.getElementById('openSiteCancel');
+        if (title) title.textContent = 'Open ' + host + '?';
+        if (msg) msg.textContent = 'iPhone needs one tap to open websites. Tap the blue button.';
+        if (btn) {
+            btn.onclick = () => {
+                // Real user gesture → window.open works
+                const w = window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                if (!w) {
+                    // last resort assign / anchor
+                    try {
+                        const a = document.createElement('a');
+                        a.href = safeUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                        document.body.appendChild(a); a.click(); a.remove();
+                    } catch (e) {
+                        window.location.href = safeUrl;
+                    }
+                }
+                hideOpenSiteOverlay();
+                setStatus('🌐 Opened ' + host);
+                speak('Opened!');
+                resumeListeningSoon(900);
+            };
+        }
+        if (cancel) {
+            cancel.onclick = () => {
+                hideOpenSiteOverlay();
+                setStatus('Okay, staying here.');
+                speak('Okay.');
+                resumeListeningSoon(500);
+            };
+        }
+        if (overlay) overlay.classList.add('active');
+        setStatus('🌐 Tap Open now for ' + host);
+        addMessage('ashlyn', 'Tap Open now to go to ' + host + '.');
+        speak('Tap the blue button to open it.');
+        setFaceState('idle');
+    }
+
+    function closeWebView() {
+        // legacy no-op — iframe webview removed
+        resumeListeningSoon(300);
+    }
+
+    // ===== CHAT =====
+    function addMessage(sender, text) {
+        const c = document.getElementById('chatMessages');
+        if (!c || !text) return;
+        const m = document.createElement('div');
+        m.className = 'message ' + sender;
+        m.textContent = text;
+        c.appendChild(m);
+        c.scrollTop = c.scrollHeight;
+    }
+    function addImageMessage(url, caption) {
+        const c = document.getElementById('chatMessages');
+        if (!c || !url) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message ashlyn';
+        wrapper.style.padding = '5px';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'width:100%;max-width:300px;border-radius:12px;display:block;';
+        img.alt = caption || 'Ashlyn drawing';
+        wrapper.appendChild(img);
+        if (caption) {
+            const cap = document.createElement('div');
+            cap.style.cssText = 'font-size:15px;font-weight:700;color:#9fe9ff;margin-top:6px;';
+            cap.textContent = caption;
+            wrapper.appendChild(cap);
+        }
+        c.appendChild(wrapper);
+        c.scrollTop = c.scrollHeight;
+    }
+    function sendTextMessage() {
+        const input = document.getElementById('chatInput');
+        const text = (input.value || '').trim();
+        if (!text) return;
+        input.value = '';
+        handleUserMessage(text);
+    }
+    function toggleChat(forceOpen) {
+        const box = document.getElementById('chatContainer');
+        const shouldOpen = forceOpen === true ? true : forceOpen === false ? false : !box.classList.contains('active');
+        if (shouldOpen) {
+            if (isListening) stopContinuousListening({ reason: 'chat' });
+            box.classList.add('active');
+            setTimeout(() => {
+                try { document.getElementById('chatInput').focus(); } catch (e) {}
+            }, 100);
+        } else {
+            box.classList.remove('active');
+            resumeListeningSoon(350);
+        }
+    }
+    function setStatus(t) {
+        const el = document.getElementById('statusText');
+        if (el) el.textContent = t;
+    }
+    function resetFace() {
+        isThinking = false;
+        isListening = false;
+        isSpeaking = false;
+        setFaceState('idle');
+        setStatus('Listening...');
+        // Slightly longer buffer to avoid echo-loop after TTS
+        resumeListeningSoon(700);
+    }
+
+    // ===== PROFILE =====
+    async function enableMicDefault() {
+        // Must run on a tap (Let’s Go). iOS remembers Allow after this.
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            voiceSupported = false;
+            setStatus('🎤 No mic API on this browser — use Type.');
+            return false;
+        }
+        try {
+            const stream = await requestMicStream();
+            // Keep tracks open a moment so permission sticks, then stop
+            await new Promise(r => setTimeout(r, 150));
+            stream.getTracks().forEach(t => t.stop());
+            voiceSupported = true;
+            try { localStorage.setItem('ashlynMicEnabled', '1'); } catch (e) {}
+            const notice = document.getElementById('voiceNotice');
+            if (notice) notice.style.display = 'none';
+            setStatus('🎤 Mic ready — talk to Moof!');
+            return true;
+        } catch (e) {
+            console.error('enableMicDefault failed', e);
+            voiceSupported = true; // still try again later on face tap
+            const notice = document.getElementById('voiceNotice');
+            if (notice) notice.style.display = 'block';
+            setStatus('🎤 Tap Allow on the mic popup, then tap Moof.');
+            return false;
+        }
+    }
+
+    async function saveProfile() {
+        unlockSpeech();
+        const name = document.getElementById('nameInput').value.trim() || 'Sweetie';
+        const ageGroup = document.getElementById('ageSelect').value || 'little';
+        profile = { name, ageGroup };
+        try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch (e) {}
+        await enableMicDefault();
+        showMainInterface();
+    }
+
+    async function saveProfileTap() {
+        unlockSpeech();
+        const kidNames = ['Princess', 'Sweetie', 'Sunshine', 'Star'];
+        profile = { name: kidNames[Math.floor(Math.random() * kidNames.length)], ageGroup: 'little' };
+        try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch (e) {}
+        await enableMicDefault();
+        showMainInterface();
+    }
+
+    function loadProfile() {
+        try {
+            const s = localStorage.getItem('ashlynProfile');
+            if (s) { profile = JSON.parse(s); return true; }
+        } catch (e) {}
+        return false;
+    }
+
+    function speakLandingIntro() {
+            const line = "Meow... I mean hi. I'm Moof. Hit me with a good one.";
+            setTimeout(() => speak(line), 250);
+        }
+
+    function showMainInterface() {
+        document.getElementById('profileSetup').style.display = 'none';
+        document.getElementById('topBar').style.display = 'flex';
+        document.getElementById('ashlynFace').style.display = 'block';
+        document.getElementById('reactorDot').style.display = 'block';
+        document.getElementById('statusText').style.display = 'block';
+        document.getElementById('hintText').style.display = 'block';
+        document.getElementById('profileName').textContent = profile.name;
+        if (profile.ageGroup === 'little') document.body.classList.add('big-button-mode');
+        else document.body.classList.remove('big-button-mode');
+
+        const greetings = {
+                    little: 'Oh hi ' + profile.name + '! It\'s me, Moof! I\'m Ashlyn\'s super smart cat brain. Just talk to me!',
+                    kid: 'Hey ' + profile.name + '! Moof here — Ashlyn\'s Brain in orange cat form. Start talking, I\'m listening!',
+                    teen: 'Oh great, ' + profile.name + ' needs the cat. Just kidding. Moof online. What\'s up?',
+                    adult: 'Oh look who finally showed up. Hey ' + profile.name + '. Moof online — Ashlyn\'s Brain. Web search, weather, drawings, and light roasting available.'
+                };
+        setFaceState('speaking');
+        setStatus(greetings[profile.ageGroup] || greetings.adult);
+        speak(greetings[profile.ageGroup] || greetings.adult);
+        // Prefer mic on by default after enter; restart safety after greeting
+        if (voiceSupported) {
+            setTimeout(() => {
+                if (!isSpeaking && !isListening && !isThinking) startContinuousListening();
+            }, 3500);
+        }
+        startClock();
+    }
+
+    function showProfile() {
+        const name = prompt('Current name: ' + profile.name + '\nChange name? (or cancel to keep)', profile.name);
+        if (name && name.trim()) {
+            profile.name = name.trim();
+            try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch (e) {}
+            document.getElementById('profileName').textContent = profile.name;
+        }
+    }
+
+    // ===== CLOCK =====
+    function startClock() {
+        function update() {
+            const now = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            document.getElementById('clock').textContent =
+                days[now.getDay()] + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+        update();
+        setInterval(update, 1000);
+    }
+
+    // ===== INIT =====
+    window.addEventListener('load', () => {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        initSpeechRecognition();
+
+        // Always begin on landing page
+        document.getElementById('profileSetup').style.display = 'flex';
+
+        if (loadProfile() && profile) {
+            document.getElementById('nameInput').value = profile.name || '';
+            document.getElementById('ageSelect').value = profile.ageGroup || '';
+        }
+
+        speakLandingIntro();
+
+        const firstTapIntro = () => {
+            unlockSpeech();
+            speakLandingIntro();
+            document.removeEventListener('touchstart', firstTapIntro);
+            document.removeEventListener('click', firstTapIntro);
+        };
+        document.addEventListener('touchstart', firstTapIntro, { passive: true });
+        document.addEventListener('click', firstTapIntro);
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('pageshow', () => {
+            if (profile && document.getElementById('profileSetup').style.display === 'none') {
+                setFaceState('idle');
+                setStatus('Listening...');
+                resumeListeningSoon(350);
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (isListening) stopContinuousListening({ reason: 'hidden' });
+                return;
+            }
+            if (profile && document.getElementById('profileSetup').style.display === 'none') {
+                setFaceState('idle');
+                setStatus('Listening...');
+                resumeListeningSoon(350);
+            }
+        });
+    });
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+    </script>
+</body>
+</html>

@@ -1,24 +1,24 @@
 {
-    "name": "Ashlyn's Brain",
-    "short_name": "Moof",
-    "description": "Moof — Ashlyn's Brain (orange tabby AI for the Nichols grandkids)",
-    "start_url": "./",
-    "display": "standalone",
-    "background_color": "#0a0e27",
-    "theme_color": "#0a0e27",
-    "orientation": "portrait",
-    "icons": [
-        {
-            "src": "icon.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icon.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        }
-    ]
+  "name": "Moof — Ashlyn's Brain",
+  "short_name": "Moof",
+  "description": "Simple voice helper for the Nichols grandkids",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a0e27",
+  "theme_color": "#0a0e27",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
