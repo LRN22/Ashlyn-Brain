@@ -176,12 +176,38 @@
       font-size: 16px; font-weight: 800; cursor: pointer;
     }
     .error { color: var(--danger); }
+
+    /* Sticky return helper after opening an outside site */
+    #awayBar {
+      display: none; position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 40; background: #0d1a38; border: 2px solid rgba(0,212,255,.55);
+      border-radius: 16px; padding: 12px 14px; box-shadow: 0 8px 28px rgba(0,0,0,.45);
+    }
+    #awayBar.on { display: block; }
+    #awayBar strong { display: block; font-size: 17px; font-weight: 900; margin-bottom: 4px; }
+    #awayBar span { display: block; font-size: 14px; font-weight: 700; color: var(--muted); line-height: 1.3; }
+    #awayBar .row { display: flex; gap: 8px; margin-top: 10px; }
+    #awayBar button {
+      flex: 1; padding: 12px 8px; border-radius: 12px; border: 0; font-size: 15px; font-weight: 900; cursor: pointer;
+    }
+    #awayBar .again { background: var(--cyan); color: #041018; }
+    #awayBar .done { background: rgba(0,212,255,.16); color: var(--text); border: 1px solid rgba(0,212,255,.4) !important; }
+
+    #toast {
+      display: none; position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%;
+      transform: translateX(-50%); z-index: 60; max-width: 92vw;
+      background: #12301f; border: 2px solid rgba(0,255,136,.55); color: #e8fff3;
+      border-radius: 16px; padding: 12px 16px; font-size: 16px; font-weight: 900;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4); text-align: center;
+    }
+    #toast.on { display: block; animation: toastPop .25s ease-out; }
+    @keyframes toastPop { from { opacity: 0; transform: translateX(-50%) translateY(-8px);} to { opacity: 1; transform: translateX(-50%) translateY(0);} }
   </style>
 </head>
 <body>
   <!-- LANDING -->
   <div id="landing">
-    <img src="ashlyn-face.png?v=simple1" alt="Moof" />
+    <img src="ashlyn-face.png?v=simple2" alt="Moof" />
     <h1>Moof</h1>
     <p>I'm Moof — Ashlyn's Brain. Tap the big button, talk, and I'll answer. Simple.</p>
     <input id="nameInput" maxlength="20" placeholder="Your name" autocomplete="nickname" />
@@ -205,7 +231,7 @@
 
     <div class="stage">
       <div class="face-wrap idle" id="face" role="button" aria-label="Tap Moof to talk">
-        <img src="ashlyn-face.png?v=simple1" alt="Moof" />
+        <img src="ashlyn-face.png?v=simple2" alt="Moof" />
         <div class="mouth" aria-hidden="true"></div>
       </div>
       <div class="status" id="status">Tap HOLD TO TALK, then speak</div>
@@ -223,11 +249,21 @@
   <div id="openModal" aria-hidden="true">
     <div class="card">
       <h3 id="openTitle">Open site?</h3>
-      <p id="openMsg">iPhone needs one tap to open websites.</p>
-      <button class="go" id="openGo" type="button">Open now</button>
-      <button class="no" id="openNo" type="button">Not now</button>
+      <p id="openMsg">Opens in Safari/a new tab. Moof stays here — use the app icon or this tab to come back.</p>
+      <button class="go" id="openGo" type="button">Open site</button>
+      <button class="no" id="openNo" type="button">Stay with Moof</button>
     </div>
   </div>
+
+  <div id="awayBar" aria-live="polite">
+    <strong id="awayTitle">Site opened</strong>
+    <span id="awayHint">To come back: tap the Moof app icon (or this browser tab).</span>
+    <div class="row">
+      <button type="button" class="again" id="awayReopen">Open again</button>
+      <button type="button" class="done" id="awayDone">I'm back</button>
+    </div>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (() => {
@@ -254,6 +290,10 @@
   let mimeType = '';
   let history = [];
   let pendingUrl = '';
+  let pendingLabel = '';
+  let leftForSite = false;
+  let hiddenAt = 0;
+  let toastTimer = null;
 
   const SITES = {
     youtube: 'https://youtube.com',
@@ -343,15 +383,110 @@
 
   function showOpen(url, label) {
     pendingUrl = url;
-    $('openTitle').textContent = 'Open ' + (label || 'site') + '?';
-    $('openMsg').textContent = 'Tap Open now (iPhone needs one tap).';
+    pendingLabel = label || 'site';
+    $('openTitle').textContent = 'Open ' + pendingLabel + '?';
+    $('openMsg').textContent =
+      'Opens outside Moof (new tab / Safari). Moof stays here. Come back: tap Moof on your Home Screen, or switch back to this tab.';
     openModal.classList.add('on');
     openModal.setAttribute('aria-hidden', 'false');
   }
   function hideOpen() {
     openModal.classList.remove('on');
     openModal.setAttribute('aria-hidden', 'true');
-    pendingUrl = '';
+  }
+  function showAwayBar(label) {
+    $('awayTitle').textContent = (label || 'Site') + ' is open';
+    $('awayHint').textContent =
+      "Easy way back: Home Screen \u2192 tap Moof (or return to this browser tab). Then tap I'm back.";
+    $('awayBar').classList.add('on');
+  }
+  function hideAwayBar() {
+    $('awayBar').classList.remove('on');
+  }
+  function showToast(msg, ms) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('on'), ms || 3200);
+  }
+  function openExternal(url) {
+    // Prefer new tab/window so Moof page stays in memory (much easier to return).
+    // Never use location.href as first choice — that replaces the app.
+    let opened = null;
+    try {
+      opened = window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (_) { opened = null; }
+    if (!opened || opened.closed) {
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        opened = true;
+      } catch (_) {
+        opened = null;
+      }
+    }
+    // Only as absolute last resort — store return flag then navigate
+    if (!opened) {
+      try { sessionStorage.setItem('moofReturn', '1'); } catch (_) {}
+      window.location.assign(url);
+      return false;
+    }
+    return true;
+  }
+  function onAppResume(reason) {
+    // iPhone freezes background tabs/apps — reset stuck listening/thinking/speaking.
+    const wasAway = leftForSite || (hiddenAt && (Date.now() - hiddenAt > 700));
+    if (recording) {
+      try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch (_) {}
+      try { cleanupStream(); } catch (_) {}
+      recording = false;
+    }
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+    busy = false;
+    recBtn.disabled = false;
+    recBtn.classList.remove('hot');
+    recBtn.textContent = '🎤 Hold to Talk';
+    hideOpen();
+    setFace('idle');
+    unlockSpeech();
+    tickClock();
+
+    if (wasAway) {
+      leftForSite = false;
+      const who = (profile && profile.name) ? profile.name : 'there';
+      setStatus('Welcome back, ' + who + '!');
+      setReply("You're back with Moof. Hold to talk or type below.");
+      hintEl.textContent = 'Hold the big button to talk — or type below.';
+      hideAwayBar();
+      showToast('👋 Welcome back — Moof is ready', 3200);
+    } else if (profile) {
+      if (!statusEl.textContent || /Opened|Listening|Thinking|talking/i.test(statusEl.textContent)) {
+        setStatus('Hold to talk — or type below');
+      }
+    }
+
+    try {
+      if (sessionStorage.getItem('moofReturn') === '1') {
+        sessionStorage.removeItem('moofReturn');
+        if (profile) {
+          landing.style.display = 'none';
+          app.classList.add('on');
+        }
+        showToast('👋 Back in Moof', 2800);
+      }
+    } catch (_) {}
+
+    if (profile) {
+      landing.style.display = 'none';
+      app.classList.add('on');
+    }
   }
 
   async function askAI(userText) {
@@ -683,29 +818,68 @@
   $('openGo').onclick = () => {
     if (!pendingUrl) return hideOpen();
     const url = pendingUrl;
+    const label = pendingLabel || 'site';
     hideOpen();
-    const w = window.open(url, '_blank', 'noopener,noreferrer');
-    if (!w) {
-      try {
-        const a = document.createElement('a');
-        a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-        document.body.appendChild(a); a.click(); a.remove();
-      } catch (_) { window.location.href = url; }
-    }
-    setStatus('Opened!');
+    leftForSite = true;
+    hiddenAt = Date.now();
+    openExternal(url);
+    setStatus('Opened ' + label + ' — come back to Moof when done');
+    setReply('Opened ' + label + '. Tap home screen Moof icon (or this tab) to return.');
+    showAwayBar(label);
+    showToast('Safari/tab opened — Moof is still here', 2600);
   };
   $('openNo').onclick = () => {
     hideOpen();
-    setStatus('Okay, staying here.');
+    leftForSite = false;
+    setStatus('Okay, staying with Moof.');
+  };
+  $('awayReopen').onclick = () => {
+    if (!pendingUrl) return;
+    leftForSite = true;
+    hiddenAt = Date.now();
+    openExternal(pendingUrl);
+    showToast('Opening again…', 1800);
+  };
+  $('awayDone').onclick = () => {
+    leftForSite = false;
+    hideAwayBar();
+    onAppResume('manual');
   };
 
-  // Prefill landing
+  // Resume when iPhone brings Moof back from Safari / app switcher
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      hiddenAt = Date.now();
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+      if (recording) {
+        try { stopRecord(); } catch (_) {}
+      }
+    } else {
+      onAppResume('visible');
+    }
+  });
+  window.addEventListener('pageshow', (e) => {
+    onAppResume(e.persisted ? 'bfcache' : 'pageshow');
+  });
+  window.addEventListener('focus', () => onAppResume('focus'));
+
+  // Prefill landing + skip to main if already used (return-from-site friendly)
   try {
     const s = localStorage.getItem('moofProfile');
     if (s) {
       const p = JSON.parse(s);
       if (p.name) $('nameInput').value = p.name;
       if (p.ageGroup) $('ageSelect').value = p.ageGroup;
+      if (p.name) {
+        profile = { name: p.name, ageGroup: p.ageGroup || 'kid' };
+        $('whoName').textContent = profile.name;
+        landing.style.display = 'none';
+        app.classList.add('on');
+        setFace('idle');
+        setStatus('Welcome back, ' + profile.name + '!');
+        setReply('Moof is ready. Hold to talk or type below.');
+        hintEl.textContent = 'Hold the big button while you talk, then release.';
+      }
     }
   } catch (_) {}
 
