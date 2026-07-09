@@ -14,7 +14,7 @@
         <link rel="manifest" href="manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #00d4ff; overflow: hidden; height: 100vh; height: 100dvh; user-select: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #b8f0ff; overflow: hidden; height: 100vh; height: 100dvh; user-select: none; -webkit-font-smoothing: antialiased; }
 
         /* ===== MOOF / ASHLYN FACE ===== */
                 .ashlyn-face {
@@ -68,54 +68,110 @@
         @keyframes dot-pulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.8} 50%{transform:translateX(-50%) scale(1.2);opacity:1} }
 
         /* ===== STATUS ===== */
-        .status { position: absolute; top: 66%; left: 50%; transform: translateX(-50%); font-size: 18px; text-align: center; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.5); white-space: normal; z-index: 10; padding: 0 20px; max-width: 90vw; }
-        .hint { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 14px; color: rgba(0,212,255,0.5); text-align: center; z-index: 10; }
+                .status {
+                    position: absolute; top: 66%; left: 50%; transform: translateX(-50%);
+                    font-size: 24px; font-weight: 800; line-height: 1.25;
+                    text-align: center; color: #f2fcff;
+                    text-shadow: 0 0 12px rgba(0,212,255,0.55), 0 2px 8px rgba(0,0,0,0.85);
+                    white-space: normal; z-index: 10; padding: 0 18px; max-width: 92vw;
+                    letter-spacing: 0.01em;
+                }
+                .hint {
+                    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+                    font-size: 18px; font-weight: 700; line-height: 1.3;
+                    color: #9fe9ff; text-align: center; z-index: 10;
+                    text-shadow: 0 1px 6px rgba(0,0,0,0.75); max-width: 92vw; padding: 0 12px;
+                }
 
-        /* ===== TOP BAR ===== */
-        .top-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; z-index: 50; }
-        .top-bar button { background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.4); color: #00d4ff; padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer; }
-        .clock { color: #00d4ff; font-size: 14px; opacity: 0.7; }
+                /* ===== TOP BAR ===== */
+                .top-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; z-index: 50; }
+                .top-bar button {
+                    background: rgba(0,212,255,0.18); border: 1px solid rgba(0,212,255,0.55);
+                    color: #f0fbff; padding: 10px 16px; border-radius: 22px;
+                    font-size: 17px; font-weight: 800; cursor: pointer;
+                }
+                .clock { color: #e8fbff; font-size: 17px; font-weight: 700; opacity: 0.95; }
 
-        /* ===== CHAT ===== */
-        .chat-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,39,0.95); display: none; flex-direction: column; z-index: 100; }
-        .chat-container.active { display: flex; }
-        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,212,255,0.1); border-bottom: 1px solid rgba(0,212,255,0.3); }
-        .chat-header h2 { color: #00d4ff; font-size: 18px; }
-        .chat-close { background: none; border: none; color: #00d4ff; font-size: 24px; cursor: pointer; padding: 5px 10px; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .message { max-width: 85%; padding: 12px 18px; border-radius: 18px; font-size: 16px; line-height: 1.5; word-wrap: break-word; }
-        .message.user { align-self: flex-end; background: #00d4ff; color: #0a0e27; }
-        .message.ashlyn { align-self: flex-start; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.3); color: #e0f8ff; }
-        .chat-input-area { display: flex; padding: 15px; gap: 10px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(0,212,255,0.2); }
-        .chat-input { flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid rgba(0,212,255,0.4); background: rgba(0,0,0,0.4); color: #fff; font-size: 16px; outline: none; }
-        .chat-send { width: 45px; height: 45px; border-radius: 50%; border: none; background: #00d4ff; color: #0a0e27; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-track { background: transparent; }
-        .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 2px; }
+                /* ===== CHAT ===== */
+                .chat-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,39,0.97); display: none; flex-direction: column; z-index: 100; }
+                .chat-container.active { display: flex; }
+                .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; background: rgba(0,212,255,0.12); border-bottom: 1px solid rgba(0,212,255,0.35); }
+                .chat-header h2 { color: #f2fcff; font-size: 22px; font-weight: 800; }
+                .chat-close { background: none; border: none; color: #f2fcff; font-size: 30px; font-weight: 700; cursor: pointer; padding: 5px 10px; }
+                .chat-messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+                .message {
+                    max-width: 90%; padding: 14px 18px; border-radius: 18px;
+                    font-size: 20px; font-weight: 700; line-height: 1.4; word-wrap: break-word;
+                }
+                .message.user { align-self: flex-end; background: #00d4ff; color: #041018; font-weight: 800; }
+                .message.ashlyn { align-self: flex-start; background: rgba(0,212,255,0.16); border: 1px solid rgba(0,212,255,0.4); color: #f2fcff; }
+                .chat-input-area { display: flex; padding: 14px; gap: 10px; background: rgba(0,0,0,0.4); border-top: 1px solid rgba(0,212,255,0.25); }
+                .chat-input {
+                    flex: 1; padding: 14px 18px; border-radius: 25px;
+                    border: 1px solid rgba(0,212,255,0.5); background: rgba(0,0,0,0.45);
+                    color: #fff; font-size: 19px; font-weight: 600; outline: none;
+                }
+                .chat-send {
+                    width: 52px; height: 52px; border-radius: 50%; border: none;
+                    background: #00d4ff; color: #041018; font-size: 22px; font-weight: 800;
+                    cursor: pointer; display: flex; align-items: center; justify-content: center;
+                }
+                .chat-messages::-webkit-scrollbar { width: 4px; }
+                .chat-messages::-webkit-scrollbar-track { background: transparent; }
+                .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.35); border-radius: 2px; }
 
-        /* ===== PROFILE SETUP ===== */
-        .profile-setup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0e27; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; z-index: 200; overflow-y: auto; }
-        .landing-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #00d4ff; box-shadow: 0 0 30px rgba(0,212,255,0.4); margin-bottom: 15px; }
-        .profile-setup h1 { color: #00d4ff; font-size: 26px; margin-bottom: 5px; text-shadow: 0 0 20px rgba(0,212,255,0.5); }
-        .profile-setup .subtitle { color: #88ccdd; font-size: 14px; margin-bottom: 25px; text-align: center; }
-        .profile-setup input { width: 100%; max-width: 300px; padding: 14px 20px; border-radius: 25px; border: 1px solid rgba(0,212,255,0.4); background: rgba(0,0,0,0.4); color: #fff; font-size: 18px; outline: none; text-align: center; margin-bottom: 15px; }
-        .profile-setup select { width: 100%; max-width: 300px; padding: 14px 20px; border-radius: 25px; border: 1px solid rgba(0,212,255,0.4); background: rgba(0,0,0,0.4); color: #fff; font-size: 16px; outline: none; margin-bottom: 20px; }
-        .profile-setup button { padding: 14px 40px; border-radius: 25px; border: none; background: #00d4ff; color: #0a0e27; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .tap-through { margin-top: 20px; padding: 20px 50px; border-radius: 25px; border: 2px solid rgba(255,107,200,0.5); background: rgba(255,107,200,0.15); color: #ff6bcf; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .tap-through .emoji { font-size: 40px; }
-        .tap-through-sub { font-size: 13px; color: rgba(255,107,207,0.7); font-weight: normal; }
+                /* ===== PROFILE SETUP ===== */
+                .profile-setup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0e27; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; z-index: 200; overflow-y: auto; }
+                .landing-photo { width: 132px; height: 132px; border-radius: 50%; object-fit: cover; border: 3px solid #00d4ff; box-shadow: 0 0 30px rgba(0,212,255,0.45); margin-bottom: 14px; }
+                .profile-setup h1 {
+                    color: #f2fcff; font-size: 34px; font-weight: 900; margin-bottom: 8px;
+                    text-shadow: 0 0 18px rgba(0,212,255,0.55); letter-spacing: 0.02em;
+                }
+                .profile-setup .subtitle {
+                    color: #d7f7ff; font-size: 18px; font-weight: 700; line-height: 1.35;
+                    margin-bottom: 22px; text-align: center; max-width: 360px;
+                }
+                .profile-setup input {
+                    width: 100%; max-width: 340px; padding: 16px 20px; border-radius: 25px;
+                    border: 1px solid rgba(0,212,255,0.5); background: rgba(0,0,0,0.45);
+                    color: #fff; font-size: 20px; font-weight: 700; outline: none; text-align: center; margin-bottom: 14px;
+                }
+                .profile-setup select {
+                    width: 100%; max-width: 340px; padding: 16px 20px; border-radius: 25px;
+                    border: 1px solid rgba(0,212,255,0.5); background: rgba(0,0,0,0.45);
+                    color: #fff; font-size: 19px; font-weight: 700; outline: none; margin-bottom: 18px;
+                }
+                .profile-setup button {
+                    padding: 16px 42px; border-radius: 25px; border: none; background: #00d4ff;
+                    color: #041018; font-size: 22px; font-weight: 900; cursor: pointer;
+                }
+                .tap-through {
+                    margin-top: 18px; padding: 18px 42px; border-radius: 25px;
+                    border: 2px solid rgba(255,107,200,0.6); background: rgba(255,107,200,0.16);
+                    color: #ffd0ef; font-size: 24px; font-weight: 900; cursor: pointer;
+                    display: flex; flex-direction: column; align-items: center; gap: 4px;
+                }
+                .tap-through .emoji { font-size: 42px; }
+                .tap-through-sub { font-size: 15px; color: #ffc2e8; font-weight: 700; }
 
-        .voice-notice { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(255,107,0,0.15); border: 1px solid rgba(255,107,0,0.4); color: #ff6b00; padding: 10px 20px; border-radius: 15px; font-size: 14px; text-align: center; display: none; z-index: 10; max-width: 300px; }
+                .voice-notice {
+                    position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
+                    background: rgba(255,107,0,0.18); border: 1px solid rgba(255,107,0,0.55);
+                    color: #ffd0b0; padding: 12px 18px; border-radius: 16px;
+                    font-size: 17px; font-weight: 800; text-align: center; display: none;
+                    z-index: 10; max-width: 320px; line-height: 1.3;
+                }
 
-        .big-button-mode .ashlyn-face { width: 360px; height: 360px; }
-        .big-button-mode .status { font-size: 22px; top: 74%; }
+                .big-button-mode .ashlyn-face { width: 360px; height: 360px; }
+                .big-button-mode .status { font-size: 28px; font-weight: 900; top: 74%; }
+                .big-button-mode .hint { font-size: 20px; font-weight: 800; }
     </style>
 </head>
 <body data-state="idle">
 
     <!-- Profile Setup — Moof faces the world -->
         <div class="profile-setup" id="profileSetup">
-            <img src="ashlyn-face.png?v=3" alt="Moof" class="landing-photo">
+            <img src="ashlyn-face.png?v=4" alt="Moof" class="landing-photo">
             <h1>🧠 ASHLYN'S BRAIN</h1>
             <p class="subtitle">I'm Moof — Ashlyn's Brain in a fluffy orange package. I know literally everything. Ask me anything. I dare you. 😼</p>
         <input type="text" id="nameInput" placeholder="What's your name?" maxlength="20">
@@ -143,7 +199,7 @@
 
     <!-- Moof avatar: static anime art + talk bob/glow (no fake mouth overlay) -->
         <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
-            <img src="ashlyn-face.png?v=3" alt="Moof">
+            <img src="ashlyn-face.png?v=4" alt="Moof">
         </div>
         <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
         <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access. You can still tap Type to talk.</div>
@@ -798,7 +854,7 @@
         wrapper.appendChild(img);
         if (caption) {
             const cap = document.createElement('div');
-            cap.style.cssText = 'font-size:12px;color:rgba(0,212,255,0.6);margin-top:5px;';
+            cap.style.cssText = 'font-size:15px;font-weight:700;color:#9fe9ff;margin-top:6px;';
             cap.textContent = caption;
             wrapper.appendChild(cap);
         }
