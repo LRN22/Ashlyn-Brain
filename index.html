@@ -17,42 +17,84 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #b8f0ff; overflow: hidden; height: 100vh; height: 100dvh; user-select: none; -webkit-font-smoothing: antialiased; }
 
         /* ===== MOOF / ASHLYN FACE ===== */
-                .ashlyn-face {
-                    position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
-                    width: 300px; height: 300px; cursor: pointer; z-index: 10;
-                    transition: all 0.4s ease;
-                }
-                .ashlyn-face img {
-                    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-                    filter: drop-shadow(0 0 25px rgba(0,212,255,0.4));
-                    transition: filter 0.3s, transform 0.2s;
-                    background: #0a0e27;
-                }
-                .ashlyn-face:active img { transform: scale(0.97); }
-                .ashlyn-face.idle img { animation: float 4s ease-in-out infinite; }
-                @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-                .listening img { filter: drop-shadow(0 0 30px rgba(255,107,0,0.7)); animation: pulse-glow 0.8s ease-in-out infinite, ear-wiggle 1.2s ease-in-out infinite; }
-                .thinking img { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); animation: pulse-glow 1s ease-in-out infinite, think-tilt 1.4s ease-in-out infinite; }
-                /* "Cat is talking": bounce + strong green glow (no fake mouth overlay) */
-                .speaking img {
-                    filter: drop-shadow(0 0 34px rgba(0,255,136,0.85));
-                    animation: talk-bob 0.28s ease-in-out infinite, pulse-glow 0.35s ease-in-out infinite;
-                }
-                @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.88} }
-                @keyframes talk-bob {
-                    0%,100% { transform: translateY(0) scale(1, 1); }
-                    35% { transform: translateY(3px) scale(1.02, 0.96); }
-                    70% { transform: translateY(-4px) scale(0.99, 1.03); }
-                }
-                @keyframes ear-wiggle {
-                    0%,100% { transform: rotate(0deg); }
-                    25% { transform: rotate(-1.5deg); }
-                    75% { transform: rotate(1.5deg); }
-                }
-                @keyframes think-tilt {
-                    0%,100% { transform: rotate(0deg); }
-                    50% { transform: rotate(2deg); }
-                }
+                        .ashlyn-face {
+                            position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
+                            width: 300px; height: 300px; cursor: pointer; z-index: 10;
+                            transition: all 0.4s ease;
+                        }
+                        .ashlyn-face img {
+                            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+                            filter: drop-shadow(0 0 25px rgba(0,212,255,0.4));
+                            transition: filter 0.3s, transform 0.2s;
+                            background: #0a0e27;
+                            display: block;
+                        }
+                        .ashlyn-face:active img { transform: scale(0.97); }
+                        .ashlyn-face.idle img { animation: float 4s ease-in-out infinite; }
+                        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+                        .listening img { filter: drop-shadow(0 0 30px rgba(255,107,0,0.7)); animation: pulse-glow 0.8s ease-in-out infinite, ear-wiggle 1.2s ease-in-out infinite; }
+                        .thinking img { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); animation: pulse-glow 1s ease-in-out infinite, think-tilt 1.4s ease-in-out infinite; }
+                        /* Talking: head bob + green glow + soft anime lip flap */
+                        .speaking img {
+                            filter: drop-shadow(0 0 34px rgba(0,255,136,0.85));
+                            animation: talk-bob 0.28s ease-in-out infinite, pulse-glow 0.35s ease-in-out infinite;
+                        }
+                        .moof-mouth {
+                            position: absolute;
+                            left: 50%;
+                            top: 64%;
+                            width: 22%;
+                            height: 14%;
+                            transform: translate(-50%, -50%) scale(1, 0.22);
+                            border-radius: 50% 50% 48% 48%;
+                            background:
+                                radial-gradient(ellipse at 50% 18%, rgba(255,140,120,0.55) 0%, transparent 42%),
+                                radial-gradient(ellipse at 50% 55%, #2a0d0a 0%, #120605 72%, #070303 100%);
+                            box-shadow:
+                                0 0 8px rgba(0,0,0,0.35),
+                                inset 0 -3px 6px rgba(180,60,40,0.35);
+                            opacity: 0;
+                            pointer-events: none;
+                            z-index: 3;
+                            overflow: hidden;
+                        }
+                        .moof-mouth::after {
+                            content: '';
+                            position: absolute;
+                            left: 50%;
+                            top: 48%;
+                            width: 46%;
+                            height: 42%;
+                            transform: translate(-50%, -20%);
+                            border-radius: 40% 40% 55% 55%;
+                            background: linear-gradient(180deg, #e46d6d 0%, #b83232 100%);
+                            opacity: 0.9;
+                        }
+                        .ashlyn-face.speaking .moof-mouth {
+                            opacity: 0.96;
+                            animation: mouth-talk 0.17s ease-in-out infinite;
+                        }
+                        @keyframes mouth-talk {
+                            0%,100% { transform: translate(-50%, -50%) scale(0.96, 0.22); }
+                            28% { transform: translate(-50%, -48%) scale(1.04, 0.95); }
+                            55% { transform: translate(-50%, -50%) scale(1.0, 0.45); }
+                            78% { transform: translate(-50%, -47%) scale(1.06, 1.12); }
+                        }
+                        @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.88} }
+                        @keyframes talk-bob {
+                            0%,100% { transform: translateY(0) scale(1, 1); }
+                            35% { transform: translateY(3px) scale(1.02, 0.96); }
+                            70% { transform: translateY(-4px) scale(0.99, 1.03); }
+                        }
+                        @keyframes ear-wiggle {
+                            0%,100% { transform: rotate(0deg); }
+                            25% { transform: rotate(-1.5deg); }
+                            75% { transform: rotate(1.5deg); }
+                        }
+                        @keyframes think-tilt {
+                            0%,100% { transform: rotate(0deg); }
+                            50% { transform: rotate(2deg); }
+                        }
 
         /* Reactor dot (sibling of face — styles keyed off body[data-state]) */
         .reactor-dot {
@@ -171,7 +213,7 @@
 
     <!-- Profile Setup — Moof faces the world -->
         <div class="profile-setup" id="profileSetup">
-            <img src="ashlyn-face.png?v=4" alt="Moof" class="landing-photo">
+            <img src="ashlyn-face.png?v=5" alt="Moof" class="landing-photo">
             <h1>🧠 ASHLYN'S BRAIN</h1>
             <p class="subtitle">I'm Moof — Ashlyn's Brain in a fluffy orange package. I know literally everything. Ask me anything. I dare you. 😼</p>
         <input type="text" id="nameInput" placeholder="What's your name?" maxlength="20">
@@ -197,10 +239,11 @@
         <button onclick="toggleChat()" id="typeBtn">⌨️ Type</button>
     </div>
 
-    <!-- Moof avatar: static anime art + talk bob/glow (no fake mouth overlay) -->
-        <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
-            <img src="ashlyn-face.png?v=4" alt="Moof">
-        </div>
+    <!-- Moof avatar: realistic-anime face + talk bob + lip flap while speaking -->
+            <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
+                <img src="ashlyn-face.png?v=5" alt="Moof">
+                <div class="moof-mouth" id="moofMouth" aria-hidden="true"></div>
+            </div>
         <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
         <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access. You can still tap Type to talk.</div>
         <div class="status" id="statusText" style="display:none;">Tap Moof and talk!</div>
@@ -281,47 +324,63 @@
     }
 
     function setFaceState(state) {
-        document.body.setAttribute('data-state', state);
-        const face = document.getElementById('ashlynFace');
-        if (face && face.style.display !== 'none') {
-            face.className = 'ashlyn-face ' + state;
+            document.body.setAttribute('data-state', state);
+            const face = document.getElementById('ashlynFace');
+            if (face && face.style.display !== 'none') {
+                face.className = 'ashlyn-face ' + state;
+            }
+            // Lip flap only during speaking; hide otherwise so still frames look clean
+            const mouth = document.getElementById('moofMouth');
+            if (mouth) {
+                mouth.style.opacity = (state === 'speaking') ? '' : '0';
+                mouth.style.animationPlayState = (state === 'speaking') ? 'running' : 'paused';
+            }
         }
-    }
 
-    function speak(text) {
-        if (!window.speechSynthesis || !text) return;
-        const age = (profile && profile.ageGroup) ? profile.ageGroup : 'little';
+        function speak(text) {
+            if (!window.speechSynthesis || !text) return;
+            const age = (profile && profile.ageGroup) ? profile.ageGroup : 'little';
 
-        try { window.speechSynthesis.resume(); } catch (e) {}
-        window.speechSynthesis.cancel();
+            try { window.speechSynthesis.resume(); } catch (e) {}
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            setFaceState('idle');
 
-        const u = new SpeechSynthesisUtterance(text);
-        u.rate = age === 'little' ? 0.9 : 1.05;
-        u.pitch = 1.5;
-        u.volume = 1.0;
+            const u = new SpeechSynthesisUtterance(text);
+            u.rate = age === 'little' ? 0.9 : 1.05;
+            u.pitch = 1.5;
+            u.volume = 1.0;
 
-        const voices = window.speechSynthesis.getVoices();
-        const v = voices.find(v => v.name.includes('Samantha')) ||
-                  voices.find(v => v.name.includes('Karen')) ||
-                  voices.find(v => v.name.includes('Moira')) ||
-                  voices.find(v => v.name.includes('Tessa')) ||
-                  voices.find(v => v.name.includes('Zoe')) ||
-                  voices.find(v => v.name.includes('Google UK English Female')) ||
-                  voices.find(v => v.name.includes('Female') && v.lang === 'en-US') ||
-                  voices.find(v => v.name.includes('Google') && v.lang === 'en-US') ||
-                  voices.find(v => v.lang === 'en-US');
-        if (v) u.voice = v;
+            const voices = window.speechSynthesis.getVoices();
+            const v = voices.find(v => v.name.includes('Samantha')) ||
+                      voices.find(v => v.name.includes('Karen')) ||
+                      voices.find(v => v.name.includes('Moira')) ||
+                      voices.find(v => v.name.includes('Tessa')) ||
+                      voices.find(v => v.name.includes('Zoe')) ||
+                      voices.find(v => v.name.includes('Google UK English Female')) ||
+                      voices.find(v => v.name.includes('Female') && v.lang === 'en-US') ||
+                      voices.find(v => v.name.includes('Google') && v.lang === 'en-US') ||
+                      voices.find(v => v.lang === 'en-US');
+            if (v) u.voice = v;
 
-        u.onstart = () => {
-            isSpeaking = true;
-            setFaceState('speaking');
-            setStatus('🎙️ Moof is talking...');
-        };
-        u.onend = () => { isSpeaking = false; resetFace(); };
-        u.onerror = () => { isSpeaking = false; resetFace(); };
+            u.onstart = () => {
+                isSpeaking = true;
+                setFaceState('speaking');
+                setStatus('🎙️ Moof is talking...');
+            };
+            u.onend = () => {
+                isSpeaking = false;
+                setFaceState('idle');
+                resetFace();
+            };
+            u.onerror = () => {
+                isSpeaking = false;
+                setFaceState('idle');
+                resetFace();
+            };
 
-        window.speechSynthesis.speak(u);
-    }
+            window.speechSynthesis.speak(u);
+        }
 
     // ===== CONTINUOUS LISTENING =====
     let audioContext = null, analyser = null, silenceTimer = null;
