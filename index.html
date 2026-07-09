@@ -8,31 +8,51 @@
     <meta name="apple-mobile-web-app-title" content="Ashlyn's Brain">
     <meta name="theme-color" content="#0a0e27">
     <title>Ashlyn's Brain</title>
-    <link rel="apple-touch-icon" href="icon.svg">
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+        <link rel="icon" type="image/png" href="icon.png">
+        <link rel="icon" type="image/svg+xml" href="icon.svg">
+        <link rel="manifest" href="manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #00d4ff; overflow: hidden; height: 100vh; height: 100dvh; user-select: none; }
 
-        /* ===== ASHLYN'S FACE ===== */
-        .ashlyn-face {
-            position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
-            width: 300px; height: 300px; cursor: pointer; z-index: 10;
-            transition: all 0.4s ease;
-        }
-        .ashlyn-face img {
-            width: 100%; height: 100%; border-radius: 20px; object-fit: cover;
-            filter: drop-shadow(0 0 25px rgba(0,212,255,0.4));
-            transition: filter 0.3s;
-        }
-        .ashlyn-face:active img { transform: scale(0.97); }
-        .ashlyn-face.idle img { animation: float 4s ease-in-out infinite; }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        .listening img { filter: drop-shadow(0 0 30px rgba(255,107,0,0.7)); animation: pulse-glow 0.8s ease-in-out infinite; }
-        .thinking img { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); animation: pulse-glow 1s ease-in-out infinite; }
-        .speaking img { filter: drop-shadow(0 0 30px rgba(0,255,136,0.6)); animation: pulse-glow 0.4s ease-in-out infinite; }
-        @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.85} }
+        /* ===== MOOF / ASHLYN FACE ===== */
+                .ashlyn-face {
+                    position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
+                    width: 300px; height: 300px; cursor: pointer; z-index: 10;
+                    transition: all 0.4s ease;
+                }
+                .ashlyn-face img {
+                    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+                    filter: drop-shadow(0 0 25px rgba(0,212,255,0.4));
+                    transition: filter 0.3s, transform 0.2s;
+                    background: #0a0e27;
+                }
+                .ashlyn-face:active img { transform: scale(0.97); }
+                .ashlyn-face.idle img { animation: float 4s ease-in-out infinite; }
+                @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+                .listening img { filter: drop-shadow(0 0 30px rgba(255,107,0,0.7)); animation: pulse-glow 0.8s ease-in-out infinite, ear-wiggle 1.2s ease-in-out infinite; }
+                .thinking img { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); animation: pulse-glow 1s ease-in-out infinite, think-tilt 1.4s ease-in-out infinite; }
+                /* "Cat is talking": bounce + strong green glow (no fake mouth overlay) */
+                .speaking img {
+                    filter: drop-shadow(0 0 34px rgba(0,255,136,0.85));
+                    animation: talk-bob 0.28s ease-in-out infinite, pulse-glow 0.35s ease-in-out infinite;
+                }
+                @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.88} }
+                @keyframes talk-bob {
+                    0%,100% { transform: translateY(0) scale(1, 1); }
+                    35% { transform: translateY(3px) scale(1.02, 0.96); }
+                    70% { transform: translateY(-4px) scale(0.99, 1.03); }
+                }
+                @keyframes ear-wiggle {
+                    0%,100% { transform: rotate(0deg); }
+                    25% { transform: rotate(-1.5deg); }
+                    75% { transform: rotate(1.5deg); }
+                }
+                @keyframes think-tilt {
+                    0%,100% { transform: rotate(0deg); }
+                    50% { transform: rotate(2deg); }
+                }
 
         /* Reactor dot (sibling of face — styles keyed off body[data-state]) */
         .reactor-dot {
@@ -93,11 +113,11 @@
 </head>
 <body data-state="idle">
 
-    <!-- Profile Setup with Ashlyn's Photo -->
-    <div class="profile-setup" id="profileSetup">
-        <img src="ashlyn-face.png" alt="Ashlyn" class="landing-photo">
-        <h1>🧠 ASHLYN'S BRAIN</h1>
-        <p class="subtitle">I'm Ashlyn's Brain. I know literally everything. Yes, everything. Don't believe me? Ask me anything. I dare you. 😏</p>
+    <!-- Profile Setup — Moof faces the world -->
+        <div class="profile-setup" id="profileSetup">
+            <img src="ashlyn-face.png?v=3" alt="Moof" class="landing-photo">
+            <h1>🧠 ASHLYN'S BRAIN</h1>
+            <p class="subtitle">I'm Moof — Ashlyn's Brain in a fluffy orange package. I know literally everything. Ask me anything. I dare you. 😼</p>
         <input type="text" id="nameInput" placeholder="What's your name?" maxlength="20">
         <select id="ageSelect">
             <option value="">How old are you?</option>
@@ -121,14 +141,14 @@
         <button onclick="toggleChat()" id="typeBtn">⌨️ Type</button>
     </div>
 
-    <!-- Ashlyn's Face (static image, no mouth animation) -->
-    <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
-        <img src="ashlyn-face.png" alt="Ashlyn">
-    </div>
-    <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
-    <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access. You can still tap Type to talk.</div>
-    <div class="status" id="statusText" style="display:none;">Tap Ashlyn's face and talk!</div>
-    <div class="hint" id="hintText" style="display:none;">Tap Ashlyn's face and talk — or use Type</div>
+    <!-- Moof avatar: static anime art + talk bob/glow (no fake mouth overlay) -->
+        <div class="ashlyn-face idle" id="ashlynFace" onclick="toggleListening()" style="display:none;">
+            <img src="ashlyn-face.png?v=3" alt="Moof">
+        </div>
+        <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
+        <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access. You can still tap Type to talk.</div>
+        <div class="status" id="statusText" style="display:none;">Tap Moof and talk!</div>
+        <div class="hint" id="hintText" style="display:none;">Tap Moof and talk — or use Type</div>
 
     <!-- Chat (text fallback) -->
     <div class="chat-container" id="chatContainer">
@@ -156,11 +176,11 @@
             '- Sites open themselves in the app from the user\'s words — do not invent OPEN_WEB lines.\n' +
             'Kid-safe only. No adult, violent, or scary content or images.',
         systemPrompts: {
-            little: 'You are Ashlyn\'s Brain for a young child (3-7). Be gentle, warm, and encouraging. RULE: Reply in 1 short sentence max. Very simple words. Never scary, never mean, never teasing, and never call their question silly.',
-            kid: 'You are Ashlyn\'s Brain for a child (8-12). Be playful but kind. RULE: Reply in 1-2 short sentences. Kid-safe, gentle, and never call their question silly.',
-            teen: 'You are Ashlyn\'s Brain for a teenager (13-17). Witty and sarcastic. RULE: Reply in 2 short sentences max.',
-            adult: 'You are Ashlyn\'s Brain. Snarky playful AI assistant. RULE: Reply in 2 short sentences max. You have web search, weather, and image generation.'
-        }
+                    little: 'You are Moof, Ashlyn\'s Brain as a friendly orange tabby cat, talking for a young child (3-7). Be gentle, warm, and encouraging. RULE: Reply in 1 short sentence max. Very simple words. Never scary, never mean, never teasing, and never call their question silly.',
+                    kid: 'You are Moof, Ashlyn\'s Brain as a playful orange tabby cat, talking for a child (8-12). Be playful but kind. RULE: Reply in 1-2 short sentences. Kid-safe, gentle, and never call their question silly.',
+                    teen: 'You are Moof, Ashlyn\'s Brain as a snarky orange tabby cat for a teenager (13-17). Witty and sarcastic. RULE: Reply in 2 short sentences max.',
+                    adult: 'You are Moof, Ashlyn\'s Brain as a snarky orange tabby cat AI. Snarky playful assistant. RULE: Reply in 2 short sentences max. You have web search, weather, and image generation.'
+                }
     };
 
     // ===== STATE =====
@@ -239,7 +259,7 @@
         u.onstart = () => {
             isSpeaking = true;
             setFaceState('speaking');
-            setStatus('🎙️ Ashlyn is talking...');
+            setStatus('🎙️ Moof is talking...');
         };
         u.onend = () => { isSpeaking = false; resetFace(); };
         u.onerror = () => { isSpeaking = false; resetFace(); };
@@ -523,7 +543,7 @@
         if (conversationHistory.length > 6) conversationHistory = conversationHistory.slice(-6);
         isThinking = true;
         setFaceState('thinking');
-        setStatus('🤔 Ashlyn is thinking...');
+        setStatus('🤔 Moof is thinking...');
         callAI(text);
     }
 
@@ -847,9 +867,9 @@
     }
 
     function speakLandingIntro() {
-        const line = "Back so soon? Hit me with a good one.";
-        setTimeout(() => speak(line), 250);
-    }
+            const line = "Meow... I mean hi. I'm Moof. Hit me with a good one.";
+            setTimeout(() => speak(line), 250);
+        }
 
     function showMainInterface() {
         document.getElementById('profileSetup').style.display = 'none';
@@ -863,11 +883,11 @@
         else document.body.classList.remove('big-button-mode');
 
         const greetings = {
-            little: 'Oh hi ' + profile.name + '! It\'s me, Ashlyn! I\'m super smart and kinda awesome. Just talk to me and I\'ll help you with whatever!',
-            kid: 'Hey ' + profile.name + '! Ashlyn here. Yes, THE Ashlyn. I\'m ready to help you with stuff. Just start talking, I\'m listening!',
-            teen: 'Oh great, ' + profile.name + ' needs me. Just kidding, I\'m totally here for you. What\'s up? Talk to me!',
-            adult: 'Oh look who finally showed up. Hey ' + profile.name + '. Ashlyn\'s Brain online. I can search the web, check weather, draw pictures, and roast you. What do you need?'
-        };
+                    little: 'Oh hi ' + profile.name + '! It\'s me, Moof! I\'m Ashlyn\'s super smart cat brain. Just talk to me!',
+                    kid: 'Hey ' + profile.name + '! Moof here — Ashlyn\'s Brain in orange cat form. Start talking, I\'m listening!',
+                    teen: 'Oh great, ' + profile.name + ' needs the cat. Just kidding. Moof online. What\'s up?',
+                    adult: 'Oh look who finally showed up. Hey ' + profile.name + '. Moof online — Ashlyn\'s Brain. Web search, weather, drawings, and light roasting available.'
+                };
         setFaceState('speaking');
         setStatus(greetings[profile.ageGroup] || greetings.adult);
         speak(greetings[profile.ageGroup] || greetings.adult);

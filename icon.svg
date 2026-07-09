@@ -1,20 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0a0e27"/>
-  <circle cx="256" cy="256" r="200" fill="none" stroke="#00d4ff" stroke-width="3" opacity="0.3"/>
-  <circle cx="256" cy="256" r="160" fill="none" stroke="#00d4ff" stroke-width="4" opacity="0.5"/>
-  <circle cx="256" cy="256" r="120" fill="#0a0e27" stroke="#00d4ff" stroke-width="6"/>
-  <circle cx="256" cy="256" r="80" fill="none" stroke="#0088cc" stroke-width="8"/>
-  <circle cx="256" cy="256" r="50" fill="#00d4ff" opacity="0.9"/>
-  <circle cx="256" cy="256" r="30" fill="#ffffff" opacity="0.8"/>
-  <!-- Segments around the outer ring -->
-  <g stroke="#00d4ff" stroke-width="4" opacity="0.7">
-    <line x1="256" y1="96" x2="256" y2="136"/>
-    <line x1="416" y1="256" x2="376" y2="256"/>
-    <line x1="256" y1="416" x2="256" y2="376"/>
-    <line x1="96" y1="256" x2="136" y2="256"/>
-    <line x1="369" y1="143" x2="341" y2="171"/>
-    <line x1="369" y1="369" x2="341" y2="341"/>
-    <line x1="143" y1="369" x2="171" y2="341"/>
-    <line x1="143" y1="143" x2="171" y2="171"/>
-  </g>
+  <rect width="512" height="512" rx="96" fill="#0a0e27"/>
+  <circle cx="256" cy="276" r="150" fill="#f0a040"/>
+  <!-- ears -->
+  <path d="M150 200 L120 80 L210 160 Z" fill="#f0a040"/>
+  <path d="M362 200 L392 80 L302 160 Z" fill="#f0a040"/>
+  <path d="M158 185 L140 110 L200 155 Z" fill="#ffb6a0"/>
+  <path d="M354 185 L372 110 L312 155 Z" fill="#ffb6a0"/>
+  <!-- eyes -->
+  <ellipse cx="210" cy="270" rx="34" ry="40" fill="#2d6b4f"/>
+  <ellipse cx="302" cy="270" rx="34" ry="40" fill="#2d6b4f"/>
+  <ellipse cx="218" cy="258" rx="10" ry="12" fill="#ffffff" opacity="0.85"/>
+  <ellipse cx="310" cy="258" rx="10" ry="12" fill="#ffffff" opacity="0.85"/>
+  <!-- nose / smile -->
+  <ellipse cx="256" cy="318" rx="14" ry="10" fill="#e88a7a"/>
+  <path d="M230 340 Q256 360 282 340" fill="none" stroke="#5a3a20" stroke-width="8" stroke-linecap="round"/>
+  <!-- cheek stripes hint -->
+  <path d="M130 280 Q150 290 145 310" fill="none" stroke="#d4842a" stroke-width="8" stroke-linecap="round"/>
+  <path d="M382 280 Q362 290 367 310" fill="none" stroke="#d4842a" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="238" fill="none" stroke="#00d4ff" stroke-width="10" opacity="0.35"/>
 </svg>

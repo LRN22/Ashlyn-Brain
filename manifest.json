@@ -1,13 +1,19 @@
 {
     "name": "Ashlyn's Brain",
-    "short_name": "Ashlyn's Brain",
-    "description": "Super-smart big sister AI for the Nichols grandkids",
+    "short_name": "Moof",
+    "description": "Moof — Ashlyn's Brain (orange tabby AI for the Nichols grandkids)",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#0a0e27",
     "theme_color": "#0a0e27",
     "orientation": "portrait",
     "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
         {
             "src": "icon.svg",
             "sizes": "any",
