@@ -34,7 +34,7 @@
         .speaking img { filter: drop-shadow(0 0 30px rgba(0,255,136,0.6)); animation: pulse-glow 0.4s ease-in-out infinite; }
         @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.85} }
 
-        /* Reactor dot */
+        /* Reactor dot (sibling of face — styles keyed off body[data-state]) */
         .reactor-dot {
             position: absolute; top: 80%; left: 50%; transform: translateX(-50%);
             width: 30px; height: 30px; border-radius: 50%;
@@ -42,13 +42,13 @@
             box-shadow: 0 0 15px #00d4ff; animation: dot-pulse 2s ease-in-out infinite; z-index: 11;
             transition: opacity 0.3s;
         }
-        .listening .reactor-dot { background: radial-gradient(circle, #ff6b00 0%, #cc5500 50%, transparent 80%); box-shadow: 0 0 15px #ff6b00; animation: dot-pulse 0.8s ease-in-out infinite; }
-        .thinking .reactor-dot { background: radial-gradient(circle, #ffd700 0%, #cc9900 50%, transparent 80%); box-shadow: 0 0 15px #ffd700; }
-        .speaking .reactor-dot { animation: dot-pulse 0.3s ease-in-out infinite; }
+        body[data-state="listening"] .reactor-dot { background: radial-gradient(circle, #ff6b00 0%, #cc5500 50%, transparent 80%); box-shadow: 0 0 15px #ff6b00; animation: dot-pulse 0.8s ease-in-out infinite; }
+        body[data-state="thinking"] .reactor-dot { background: radial-gradient(circle, #ffd700 0%, #cc9900 50%, transparent 80%); box-shadow: 0 0 15px #ffd700; }
+        body[data-state="speaking"] .reactor-dot { background: radial-gradient(circle, #00ff88 0%, #00aa55 50%, transparent 80%); box-shadow: 0 0 15px #00ff88; animation: dot-pulse 0.3s ease-in-out infinite; }
         @keyframes dot-pulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.8} 50%{transform:translateX(-50%) scale(1.2);opacity:1} }
 
         /* ===== STATUS ===== */
-        .status { position: absolute; top: 66%; left: 50%; transform: translateX(-50%); font-size: 18px; text-align: center; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.5); white-space: nowrap; z-index: 10; padding: 0 20px; }
+        .status { position: absolute; top: 66%; left: 50%; transform: translateX(-50%); font-size: 18px; text-align: center; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.5); white-space: normal; z-index: 10; padding: 0 20px; max-width: 90vw; }
         .hint { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 14px; color: rgba(0,212,255,0.5); text-align: center; z-index: 10; }
 
         /* ===== TOP BAR ===== */
@@ -73,97 +73,6 @@
         .chat-messages::-webkit-scrollbar-track { background: transparent; }
         .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 2px; }
 
-        /* ===== WEB VIEW OVERLAY ===== */
-        .webview-overlay {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            display: none;
-            z-index: 300;
-        }
-        .webview-overlay.active { display: block; }
-        .webview-frame {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            background: #111;
-            padding-top: 34px;
-        }
-        .web-top-strip {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 34px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(10,14,39,0.92);
-            color: #9fe9ff;
-            font-size: 12px;
-            z-index: 302;
-            border-bottom: 1px solid rgba(0,212,255,0.35);
-            text-align: center;
-            padding: 0 10px;
-        }
-        .web-close-avatar {
-            position: fixed;
-            bottom: max(14px, env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            width: 72px;
-            height: 72px;
-            border: 2px solid rgba(0,212,255,0.85);
-            border-radius: 50%;
-            padding: 0;
-            background: #0a0e27;
-            box-shadow: 0 0 16px rgba(0,212,255,0.65);
-            cursor: pointer;
-            z-index: 301;
-        }
-        .web-close-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .web-close-avatar-label {
-            position: fixed;
-            bottom: calc(max(14px, env(safe-area-inset-bottom)) + 78px);
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            color: #9fe9ff;
-            text-shadow: 0 0 8px rgba(0,212,255,0.6);
-            z-index: 301;
-            pointer-events: none;
-        }
-        .web-open-external {
-            position: fixed;
-            top: 44%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 303;
-            display: none;
-            border: 1px solid rgba(0,212,255,0.5);
-            background: rgba(10,14,39,0.92);
-            color: #9fe9ff;
-            border-radius: 16px;
-            padding: 14px 18px;
-            text-align: center;
-            width: min(90vw, 340px);
-        }
-        .web-open-external button {
-            margin-top: 10px;
-            border: none;
-            background: #00d4ff;
-            color: #0a0e27;
-            font-weight: 700;
-            border-radius: 20px;
-            padding: 10px 16px;
-            cursor: pointer;
-        }
-
         /* ===== PROFILE SETUP ===== */
         .profile-setup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0e27; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; z-index: 200; overflow-y: auto; }
         .landing-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #00d4ff; box-shadow: 0 0 30px rgba(0,212,255,0.4); margin-bottom: 15px; }
@@ -176,14 +85,13 @@
         .tap-through .emoji { font-size: 40px; }
         .tap-through-sub { font-size: 13px; color: rgba(255,107,207,0.7); font-weight: normal; }
 
-        /* Voice not supported notice */
         .voice-notice { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(255,107,0,0.15); border: 1px solid rgba(255,107,0,0.4); color: #ff6b00; padding: 10px 20px; border-radius: 15px; font-size: 14px; text-align: center; display: none; z-index: 10; max-width: 300px; }
 
         .big-button-mode .ashlyn-face { width: 360px; height: 360px; }
-        .big-button-mode .status { font-size: 24px; top: 74%; }
+        .big-button-mode .status { font-size: 22px; top: 74%; }
     </style>
 </head>
-<body>
+<body data-state="idle">
 
     <!-- Profile Setup with Ashlyn's Photo -->
     <div class="profile-setup" id="profileSetup">
@@ -210,7 +118,7 @@
     <div class="top-bar" id="topBar" style="display:none;">
         <button onclick="showProfile()">👤 <span id="profileName"></span></button>
         <span class="clock" id="clock"></span>
-        <button style="opacity:.55;cursor:default;" aria-disabled="true">🎤 Voice Only</button>
+        <button onclick="toggleChat()" id="typeBtn">⌨️ Type</button>
     </div>
 
     <!-- Ashlyn's Face (static image, no mouth animation) -->
@@ -218,11 +126,11 @@
         <img src="ashlyn-face.png" alt="Ashlyn">
     </div>
     <div class="reactor-dot" id="reactorDot" style="display:none;"></div>
-    <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access to use Ashlyn (voice-only mode).</div>
+    <div class="voice-notice" id="voiceNotice">🎤 Please allow microphone access. You can still tap Type to talk.</div>
     <div class="status" id="statusText" style="display:none;">Tap Ashlyn's face and talk!</div>
-    <div class="hint" id="hintText" style="display:none;">Tap Ashlyn's face and talk!</div>
+    <div class="hint" id="hintText" style="display:none;">Tap Ashlyn's face and talk — or use Type</div>
 
-    <!-- Chat -->
+    <!-- Chat (text fallback) -->
     <div class="chat-container" id="chatContainer">
         <div class="chat-header">
             <h2>🧠 Ashlyn's Brain</h2>
@@ -235,734 +143,815 @@
         </div>
     </div>
 
-    <!-- In-app Web View -->
-    <div class="webview-overlay" id="webView">
-        <div class="web-top-strip" id="webTopStrip">Loading site... Tap Ashlyn at bottom to return.</div>
-        <iframe class="webview-frame" id="webFrame" title="Web Page"></iframe>
-        <div class="web-open-external" id="webExternalNotice">
-            <div>This site needs a new tab.</div>
-            <button id="webExternalBtn" type="button">Open now</button>
-        </div>
-        <div class="web-close-avatar-label">Tap Ashlyn to go back</div>
-        <button class="web-close-avatar" id="webCloseAvatar" onclick="closeWebView()" aria-label="Close web page and return">
-            <img src="ashlyn-face.png" alt="Close and return">
-        </button>
-    </div>
-
     <script>
     const CONFIG = {
         apiEndpoint: '/api/chat',
-    webEndpoint: '/api/web',
-    systemPrompts: {
+        webEndpoint: '/api/web',
+        // Shared protocol instructions for tools
+        toolRules:
+            'TOOLS (only when truly needed):\n' +
+            '- Weather questions: answer from any weather data already provided. Do not request web search for weather.\n' +
+            '- For other facts you do not know: include exactly one line WEB_SEARCH: <short query> and nothing else important after it.\n' +
+            '- If they ask you to draw/create a picture: include DRAW_IMAGE: <detailed kid-safe description>.\n' +
+            '- Sites open themselves in the app from the user\'s words — do not invent OPEN_WEB lines.\n' +
+            'Kid-safe only. No adult, violent, or scary content or images.',
+        systemPrompts: {
             little: 'You are Ashlyn\'s Brain for a young child (3-7). Be gentle, warm, and encouraging. RULE: Reply in 1 short sentence max. Very simple words. Never scary, never mean, never teasing, and never call their question silly.',
             kid: 'You are Ashlyn\'s Brain for a child (8-12). Be playful but kind. RULE: Reply in 1-2 short sentences. Kid-safe, gentle, and never call their question silly.',
             teen: 'You are Ashlyn\'s Brain for a teenager (13-17). Witty and sarcastic. RULE: Reply in 2 short sentences max.',
             adult: 'You are Ashlyn\'s Brain. Snarky playful AI assistant. RULE: Reply in 2 short sentences max. You have web search, weather, and image generation.'
         }
-};
-// ===== STATE =====
-let profile = null, recognition = null, isListening = false, isThinking = false, isSpeaking = false;
-let conversationHistory = [], mediaRecorder = null, audioChunks = [], mediaStream = null, voiceSupported = false;
-let pendingOpenUrl = null, pendingOpenLabel = '';
-
-const KNOWN_SITES = {
-    'youtube':'youtube.com','you tube':'youtube.com','utube':'youtube.com','youtub':'youtube.com',
-    'google':'google.com','goggle':'google.com','gogle':'google.com','googol':'google.com','gmail':'gmail.com',
-    'facebook':'facebook.com','instagram':'instagram.com','twitter':'x.com','x':'x.com',
-    'amazon':'amazon.com','netflix':'netflix.com','disney':'disneyplus.com','disney plus':'disneyplus.com',
-    'walmart':'walmart.com','target':'target.com','ebay':'ebay.com','chatgpt':'chatgpt.com',
-    'claude':'claude.ai','groq':'groq.com','vercel':'vercel.com',
-    'gridplan':'gridplan.app','scheduleverify':'scheduleverify.com',
-    'ashlyn':'ashlyn-brain.xyz','ashlyn brain':'ashlyn-brain.xyz',
-    'github':'github.com','reddit':'reddit.com','pinterest':'pinterest.com',
-    'tiktok':'tiktok.com','linkedin':'linkedin.com','spotify':'spotify.com',
-    'zoom':'zoom.us','weather':'weather.com','wikipedia':'wikipedia.org',
-    'imdb':'imdb.com','etsy':'etsy.com','shopify':'shopify.com',
-    'zillow':'zillow.com','airbnb':'airbnb.com','uber':'uber.com',
-    'nasa':'nasa.gov','espn':'espn.com','cnn':'cnn.com','bbc':'bbc.com'
-};
-
-// ===== SPEECH OUTPUT =====
-let speechUnlocked = false;
-
-function unlockSpeech() {
-    if (!window.speechSynthesis || speechUnlocked) return;
-    speechUnlocked = true;
-    try {
-        window.speechSynthesis.resume();
-        const ping = new SpeechSynthesisUtterance('');
-        ping.volume = 0;
-        window.speechSynthesis.speak(ping);
-    } catch(e) {}
-}
-
-function speak(text) {
-    if (!window.speechSynthesis || !text) return;
-    const age = (profile && profile.ageGroup) ? profile.ageGroup : 'little';
-
-    try { window.speechSynthesis.resume(); } catch(e) {}
-    window.speechSynthesis.cancel();
-
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = age === 'little' ? 0.9 : 1.05;
-    u.pitch = 1.5; // Higher pitch for girly voice
-    u.volume = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    // Prefer high-pitched female voices
-    const v = voices.find(v => v.name.includes('Samantha')) ||
-              voices.find(v => v.name.includes('Karen')) ||
-              voices.find(v => v.name.includes('Moira')) ||
-              voices.find(v => v.name.includes('Tessa')) ||
-              voices.find(v => v.name.includes('Zoe')) ||
-              voices.find(v => v.name.includes('Google UK English Female')) ||
-              voices.find(v => v.name.includes('Female') && v.lang === 'en-US') ||
-              voices.find(v => v.name.includes('Google') && v.lang === 'en-US') ||
-              voices.find(v => v.lang === 'en-US');
-    if (v) u.voice = v;
-
-    u.onstart = () => {
-        isSpeaking = true;
-        const face = document.getElementById('ashlynFace');
-        if (face && face.style.display !== 'none') face.className = 'ashlyn-face speaking';
-        setStatus('🎙️ Ashlyn is talking...');
     };
-    u.onend = () => { isSpeaking = false; resetFace(); };
-    u.onerror = () => { isSpeaking = false; resetFace(); };
 
-    window.speechSynthesis.speak(u);
-}
+    // ===== STATE =====
+    let profile = null, isListening = false, isThinking = false, isSpeaking = false;
+    let conversationHistory = [], mediaRecorder = null, audioChunks = [], mediaStream = null, voiceSupported = false;
+    let pendingOpenUrl = null, pendingOpenLabel = '';
+    let currentMimeType = 'audio/webm';
+    let speechDetected = false;
+    let silenceMs = 0;
+    let listenSession = 0; // ignore late onstop from earlier sessions
 
-// ===== CONTINUOUS LISTENING (auto-listen, no tapping) =====
-let audioContext = null, analyser = null, silenceTimer = null, speechDetected = false;
-const SILENCE_THRESHOLD = 8; // volume level to detect speech
-const SILENCE_DURATION = 2000; // ms of silence before transcribing
+    const KNOWN_SITES = {
+        'youtube':'youtube.com','you tube':'youtube.com','utube':'youtube.com','youtub':'youtube.com',
+        'google':'google.com','goggle':'google.com','gogle':'google.com','googol':'google.com','gmail':'gmail.com',
+        'facebook':'facebook.com','instagram':'instagram.com','twitter':'x.com','x':'x.com',
+        'amazon':'amazon.com','netflix':'netflix.com','disney':'disneyplus.com','disney plus':'disneyplus.com',
+        'walmart':'walmart.com','target':'target.com','ebay':'ebay.com','chatgpt':'chatgpt.com',
+        'claude':'claude.ai','groq':'groq.com','vercel':'vercel.com',
+        'gridplan':'gridplan.app','scheduleverify':'scheduleverify.com',
+        'ashlyn':'ashlyn-brain.xyz','ashlyn brain':'ashlyn-brain.xyz',
+        'github':'github.com','reddit':'reddit.com','pinterest':'pinterest.com',
+        'tiktok':'tiktok.com','linkedin':'linkedin.com','spotify':'spotify.com',
+        'zoom':'zoom.us','weather':'weather.com','wikipedia':'wikipedia.org',
+        'imdb':'imdb.com','etsy':'etsy.com','shopify':'shopify.com',
+        'zillow':'zillow.com','airbnb':'airbnb.com','uber':'uber.com',
+        'nasa':'nasa.gov','espn':'espn.com','cnn':'cnn.com','bbc':'bbc.com',
+        'best buy':'bestbuy.com','bestbuy':'bestbuy.com'
+    };
 
-function initSpeechRecognition() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        voiceSupported = true;
-    } else {
-        voiceSupported = false;
+    // ===== SPEECH OUTPUT =====
+    let speechUnlocked = false;
+
+    function unlockSpeech() {
+        if (!window.speechSynthesis || speechUnlocked) return;
+        speechUnlocked = true;
+        try {
+            window.speechSynthesis.resume();
+            const ping = new SpeechSynthesisUtterance('');
+            ping.volume = 0;
+            window.speechSynthesis.speak(ping);
+        } catch (e) {}
     }
-}
 
-async function startContinuousListening() {
-    if (!voiceSupported || isListening || isThinking || isSpeaking) return;
-
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunks = [];
-
-        let mimeType = 'audio/webm';
-        if (!MediaRecorder.isTypeSupported('audio/webm')) {
-            mimeType = 'audio/mp4';
+    function setFaceState(state) {
+        document.body.setAttribute('data-state', state);
+        const face = document.getElementById('ashlynFace');
+        if (face && face.style.display !== 'none') {
+            face.className = 'ashlyn-face ' + state;
         }
+    }
 
-        mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
-        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: mimeType });
-            transcribeAudio(audioBlob);
+    function speak(text) {
+        if (!window.speechSynthesis || !text) return;
+        const age = (profile && profile.ageGroup) ? profile.ageGroup : 'little';
+
+        try { window.speechSynthesis.resume(); } catch (e) {}
+        window.speechSynthesis.cancel();
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = age === 'little' ? 0.9 : 1.05;
+        u.pitch = 1.5;
+        u.volume = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const v = voices.find(v => v.name.includes('Samantha')) ||
+                  voices.find(v => v.name.includes('Karen')) ||
+                  voices.find(v => v.name.includes('Moira')) ||
+                  voices.find(v => v.name.includes('Tessa')) ||
+                  voices.find(v => v.name.includes('Zoe')) ||
+                  voices.find(v => v.name.includes('Google UK English Female')) ||
+                  voices.find(v => v.name.includes('Female') && v.lang === 'en-US') ||
+                  voices.find(v => v.name.includes('Google') && v.lang === 'en-US') ||
+                  voices.find(v => v.lang === 'en-US');
+        if (v) u.voice = v;
+
+        u.onstart = () => {
+            isSpeaking = true;
+            setFaceState('speaking');
+            setStatus('🎙️ Ashlyn is talking...');
         };
+        u.onend = () => { isSpeaking = false; resetFace(); };
+        u.onerror = () => { isSpeaking = false; resetFace(); };
 
-        // Set up volume detection for silence detection
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaStreamSource(mediaStream);
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        source.connect(analyser);
-
-        mediaRecorder.start();
-        isListening = true;
-        speechDetected = false;
-        document.getElementById('ashlynFace').className = 'ashlyn-face listening';
-        setStatus('🎙️ Listening... just talk!');
-
-        // Monitor volume to detect speech/silence
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        silenceTimer = setInterval(() => {
-            if (!isListening) return;
-            analyser.getByteFrequencyData(dataArray);
-            // Calculate average volume
-            let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-            const avg = sum / dataArray.length;
-
-            if (avg > SILENCE_THRESHOLD) {
-                // Speech detected
-                speechDetected = true;
-            } else if (speechDetected) {
-                // Silence after speech — stop and transcribe
-                stopContinuousListening();
-            }
-        }, 200);
-    } catch(e) {
-        setStatus('🎤 Microphone permission needed for voice mode.');
-        document.getElementById('voiceNotice').style.display = 'block';
+        window.speechSynthesis.speak(u);
     }
-}
 
-function stopContinuousListening() {
-    if (silenceTimer) { clearInterval(silenceTimer); silenceTimer = null; }
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-    if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
-    if (audioContext) { audioContext.close(); audioContext = null; }
-    isListening = false;
-    if (speechDetected) {
-        document.getElementById('ashlynFace').className = 'ashlyn-face thinking';
-        setStatus('📝 Got it! Thinking...');
-    } else {
-        // No speech detected — restart listening
-        setTimeout(() => startContinuousListening(), 300);
+    // ===== CONTINUOUS LISTENING =====
+    let audioContext = null, analyser = null, silenceTimer = null;
+    const SILENCE_THRESHOLD = 10; // slightly less jumpy than 8
+    const SILENCE_DURATION = 2000; // require ~2s quiet after speech before cutover
+    const MIN_SPEECH_MS = 250; // ignore tiny blips
+
+    function initSpeechRecognition() {
+        voiceSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
     }
-}
 
-// Tap still works as a manual override
-async function toggleListening() {
-    unlockSpeech();
-    if (isSpeaking) { window.speechSynthesis.cancel(); isSpeaking = false; resetFace(); return; }
-    if (isThinking) return;
-
-    if (isListening) {
-        stopContinuousListening();
-    } else {
-        startContinuousListening();
-    }
-}
-
-async function transcribeAudio(audioBlob) {
-    try {
-        const response = await fetch('/api/transcribe', {
-            method: 'POST',
-            headers: { 'Content-Type': audioBlob.type },
-            body: audioBlob
-        });
-        if (!response.ok) throw new Error('Transcription failed');
-        const data = await response.json();
-        const text = data.text || '';
-        if (text.trim()) {
-            handleUserMessage(text);
-        } else {
-            // No speech detected — restart listening
-            setTimeout(() => startContinuousListening(), 500);
+    function pickRecorderMime() {
+        const candidates = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/aac',
+            'audio/ogg;codecs=opus'
+        ];
+        for (const t of candidates) {
+            try {
+                if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+            } catch (e) {}
         }
-    } catch(error) {
-        setStatus('Couldn\'t transcribe. Restarting...');
-        setTimeout(() => startContinuousListening(), 1000);
+        return '';
     }
-}
 
-// ===== MESSAGE HANDLING =====
-function normalizeSpeech(text) {
-    return (text || '')
-        .toLowerCase()
-        .trim()
-        .replace(/[?.!,]+$/g, '')
-        .replace(/\bapp\b/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
+    async function startContinuousListening() {
+        if (!voiceSupported || isListening || isThinking || isSpeaking) return;
+        if (document.getElementById('chatContainer').classList.contains('active')) return;
 
-function detectMentionedSite(text) {
-    const lower = normalizeSpeech(text);
-    if (!lower) return null;
+        try {
+            const session = ++listenSession;
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+            audioChunks = [];
+            speechDetected = false;
+            silenceMs = 0;
+            let speechMs = 0;
 
-    const keys = Object.keys(KNOWN_SITES).sort((a, b) => b.length - a.length);
-    for (const key of keys) {
-        if (key.length <= 2) {
-            if (lower.split(/\s+/).includes(key)) {
+            currentMimeType = pickRecorderMime() || 'audio/webm';
+            try {
+                mediaRecorder = currentMimeType
+                    ? new MediaRecorder(mediaStream, { mimeType: currentMimeType })
+                    : new MediaRecorder(mediaStream);
+                if (mediaRecorder.mimeType) currentMimeType = mediaRecorder.mimeType;
+            } catch (e) {
+                mediaRecorder = new MediaRecorder(mediaStream);
+                currentMimeType = mediaRecorder.mimeType || 'audio/webm';
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) audioChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+                // Drop late events after a newer listen session started
+                if (session !== listenSession) return;
+                const type = currentMimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunks, { type });
+                if (speechDetected && audioBlob.size > 1200) {
+                    transcribeAudio(audioBlob);
+                } else {
+                    setTimeout(() => startContinuousListening(), 350);
+                }
+            };
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                try { await audioContext.resume(); } catch (e) {}
+            }
+            const source = audioContext.createMediaStreamSource(mediaStream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+
+            mediaRecorder.start(250);
+            isListening = true;
+            setFaceState('listening');
+            setStatus('🎙️ Listening... just talk!');
+            document.getElementById('voiceNotice').style.display = 'none';
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const TICK = 200;
+            silenceTimer = setInterval(() => {
+                if (!isListening || session !== listenSession) return;
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                const avg = sum / dataArray.length;
+
+                if (avg > SILENCE_THRESHOLD) {
+                    speechMs += TICK;
+                    if (speechMs >= MIN_SPEECH_MS) {
+                        speechDetected = true;
+                        silenceMs = 0;
+                    }
+                } else if (speechDetected) {
+                    silenceMs += TICK;
+                    if (silenceMs >= SILENCE_DURATION) {
+                        stopContinuousListening({ reason: 'silence' });
+                    }
+                } else {
+                    speechMs = 0;
+                }
+            }, TICK);
+        } catch (e) {
+            setStatus('🎤 Microphone permission needed — use Type as backup.');
+            document.getElementById('voiceNotice').style.display = 'block';
+            // Automatically open chat fallback so kids aren't stuck
+            setTimeout(() => {
+                if (!isListening) toggleChat(true);
+            }, 800);
+        }
+    }
+
+    function stopContinuousListening(opts) {
+        opts = opts || {};
+        if (silenceTimer) { clearInterval(silenceTimer); silenceTimer = null; }
+        const hadSpeech = speechDetected;
+        const wasListening = isListening;
+        isListening = false;
+
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            try { mediaRecorder.stop(); } catch (e) {}
+        } else if (!hadSpeech && wasListening) {
+            setTimeout(() => startContinuousListening(), 300);
+        }
+
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(t => t.stop());
+            mediaStream = null;
+        }
+        if (audioContext) {
+            try { audioContext.close(); } catch (e) {}
+            audioContext = null;
+        }
+
+        if (hadSpeech) {
+            setFaceState('thinking');
+            setStatus('📝 Got it! Thinking...');
+        }
+    }
+
+    // Tap face = stop speaking, stop/start listening
+    async function toggleListening() {
+        unlockSpeech();
+        if (isSpeaking) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            isSpeaking = false;
+            resetFace();
+            return;
+        }
+        if (isThinking) return;
+
+        if (isListening) {
+            // Manual stop: only transcribe if they actually said something
+            stopContinuousListening({ reason: 'tap' });
+        } else {
+            startContinuousListening();
+        }
+    }
+
+    async function transcribeAudio(audioBlob) {
+        try {
+            isThinking = true;
+            setFaceState('thinking');
+            const response = await fetch('/api/transcribe', {
+                method: 'POST',
+                headers: { 'Content-Type': audioBlob.type || currentMimeType || 'audio/webm' },
+                body: audioBlob
+            });
+            if (!response.ok) throw new Error('Transcription failed');
+            const data = await response.json();
+            const text = (data.text || '').trim();
+            if (text) {
+                handleUserMessage(text);
+            } else {
+                isThinking = false;
+                setStatus('Didn\'t catch that — try again.');
+                setFaceState('idle');
+                setTimeout(() => startContinuousListening(), 500);
+            }
+        } catch (error) {
+            isThinking = false;
+            setStatus('Couldn\'t hear that. Restarting...');
+            setFaceState('idle');
+            setTimeout(() => startContinuousListening(), 1000);
+        }
+    }
+
+    // ===== MESSAGE HANDLING =====
+    function normalizeSpeech(text) {
+        return (text || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[?.!,]+$/g, '')
+            .replace(/\bapp\b/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function detectMentionedSite(text) {
+        const lower = normalizeSpeech(text);
+        if (!lower) return null;
+
+        const keys = Object.keys(KNOWN_SITES).sort((a, b) => b.length - a.length);
+        for (const key of keys) {
+            if (key.length <= 2) {
+                if (lower.split(/\s+/).includes(key)) {
+                    return { key, url: 'https://' + KNOWN_SITES[key] };
+                }
+            } else if (lower.includes(key)) {
                 return { key, url: 'https://' + KNOWN_SITES[key] };
             }
-        } else if (lower.includes(key)) {
-            return { key, url: 'https://' + KNOWN_SITES[key] };
         }
-    }
-    return null;
-}
-
-function looksLikeSiteOnlyUtterance(text) {
-    const lower = normalizeSpeech(text);
-    if (!lower) return false;
-    const words = lower.split(/\s+/);
-    if (words.length > 3) return false;
-    const questionWords = ['what', 'why', 'how', 'who', 'when', 'where', 'tell'];
-    if (questionWords.some(w => words.includes(w))) return false;
-    return !!detectMentionedSite(lower);
-}
-
-function handleUserMessage(text) {
-    if (!text.trim()) return;
-    addMessage('user', text);
-
-    const lower = normalizeSpeech(text);
-
-    // If we asked a clarification like "open google?", resolve it first
-    if (pendingOpenUrl) {
-        const yesWords = ['yes', 'yeah', 'yep', 'open it', 'do it', 'sure', 'ok', 'okay', 'please'];
-        const noWords = ['no', 'nope', 'cancel', 'stop', 'not now'];
-        if (yesWords.some(w => lower.includes(w))) {
-            const url = pendingOpenUrl;
-            pendingOpenUrl = null; pendingOpenLabel = '';
-            openWebView(url);
-            return;
-        }
-        if (noWords.some(w => lower.includes(w))) {
-            pendingOpenUrl = null; pendingOpenLabel = '';
-            const msg = 'Okay, I will not open it.';
-            addMessage('ashlyn', msg); speak(msg);
-            return;
-        }
-        const ask = 'Do you want me to open ' + pendingOpenLabel + '? Say yes or no.';
-        addMessage('ashlyn', ask); speak(ask);
-        return;
+        return null;
     }
 
-    // Direct open command (very forgiving)
-    const cmd = detectOpenCommand(text);
-    if (cmd) {
-        openWebView(cmd);
-        return;
+    function looksLikeSiteOnlyUtterance(text) {
+        const lower = normalizeSpeech(text);
+        if (!lower) return false;
+        const words = lower.split(/\s+/);
+        if (words.length > 3) return false;
+        const questionWords = ['what', 'why', 'how', 'who', 'when', 'where', 'tell'];
+        if (questionWords.some(w => words.includes(w))) return false;
+        return !!detectMentionedSite(lower);
     }
 
-    // If they only said a site name (ex: "google"), ask quick confirmation
-    if (looksLikeSiteOnlyUtterance(text)) {
-        const m = detectMentionedSite(text);
-        if (m) {
-            pendingOpenUrl = m.url;
-            pendingOpenLabel = m.key;
-            const ask = 'Do you want me to open ' + m.key + '?';
+    function handleUserMessage(text) {
+        if (!text || !text.trim()) return;
+        addMessage('user', text);
+
+        const lower = normalizeSpeech(text);
+
+        // Resolve open-website confirmation
+        if (pendingOpenUrl) {
+            const yesWords = ['yes', 'yeah', 'yep', 'open it', 'do it', 'sure', 'ok', 'okay', 'please'];
+            const noWords = ['no', 'nope', 'cancel', 'stop', 'not now'];
+            if (yesWords.some(w => lower === w || lower.includes(w))) {
+                const url = pendingOpenUrl;
+                pendingOpenUrl = null; pendingOpenLabel = '';
+                openWebView(url);
+                return;
+            }
+            if (noWords.some(w => lower === w || lower.includes(w))) {
+                pendingOpenUrl = null; pendingOpenLabel = '';
+                const msg = 'Okay, I will not open it.';
+                addMessage('ashlyn', msg); speak(msg);
+                return;
+            }
+            const ask = 'Do you want me to open ' + pendingOpenLabel + '? Say yes or no.';
             addMessage('ashlyn', ask); speak(ask);
             return;
         }
-    }
 
-    conversationHistory.push({ role: 'user', content: text });
-    // Keep context very small for faster replies
-    if (conversationHistory.length > 6) conversationHistory = conversationHistory.slice(-6);
-    isThinking = true;
-    document.getElementById('ashlynFace').className = 'ashlyn-face thinking';
-    setStatus('🤔 Ashlyn is thinking...');
-    callAI(text);
-}
-
-// Detect website-open voice commands (very forgiving for young kids)
-function detectOpenCommand(text) {
-    const lower = normalizeSpeech(text);
-    if (!lower) return null;
-
-    const intentWords = ['open','go to','go','take me','show me','visit','launch','start','play','watch','pull up','bring up'];
-    const hasOpenIntent = intentWords.some(w => new RegExp('\\b' + w.replace(/\s+/g, '\\s+') + '\\b').test(lower));
-    const m = detectMentionedSite(lower);
-
-    // If explicit open intent + known site mention, open directly
-    if (hasOpenIntent && m) return m.url;
-
-    // Classic command forms: open/go/visit + free-form domain
-    const match = lower.match(/^(?:can you\s+|please\s+|ashlyn\s+)?(?:open|go to|go|take me to|show me|visit|launch|start|play|watch|pull up|bring up)\b\s+(.+)/);
-    if (!match) return null;
-
-    let site = match[1].trim().replace(/[?.!,]+$/g, '').replace(/^(the|my|a|an)\s+/i, '');
-    site = site.replace(/\s+(for me|please)$/i, '').replace(/\bapp\b/gi, '').trim();
-
-    if (KNOWN_SITES[site]) return 'https://' + KNOWN_SITES[site];
-    if (site.includes('.')) return site.startsWith('http') ? site : 'https://' + site;
-    return 'https://' + site.replace(/\s+/g, '') + '.com';
-}
-
-// ===== CALL AI (streamlined — fewer round trips for speed) =====
-async function callAI(userText) {
-    const sysBase = CONFIG.systemPrompts[profile.ageGroup] || CONFIG.systemPrompts.adult;
-    const now = new Date();
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
-    const offset = -now.getTimezoneOffset() / 60;
-    const offsetStr = offset >= 0 ? 'UTC+' + offset : 'UTC' + offset;
-    const timeCtx = 'Current date/time: ' + now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' at ' + now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) + '. User timezone: ' + tz + ' (' + offsetStr + '). User is in Beaumont, Texas, USA (Southeast Texas, near Houston/Gulf Coast). Use Beaumont, Texas for weather and local info.';
-
-    // Check if this looks like a weather query — do web search FIRST (saves one round trip)
-    const weatherWords = ['weather','temperature','forecast','rain','sunny','cloud','hot','cold','tonight','tomorrow','humidity','wind'];
-    const isWeather = weatherWords.some(w => userText.toLowerCase().includes(w));
-
-    let webContext = '';
-    if (isWeather) {
-        setStatus('🌤️ Checking Texas weather...');
-        try {
-            const webRes = await fetch(CONFIG.webEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query: 'weather Beaumont Texas' }) });
-            if (webRes.ok) {
-                const webData = await webRes.json();
-                if (webData.summary) webContext = '\n\nReal-time weather data:\n' + webData.summary;
-            }
-        } catch(e) {}
-    }
-
-    const toneRule = (profile.ageGroup === 'little' || profile.ageGroup === 'kid')
-        ? 'Be gentle and kind. Never label their question as silly. Always try to help. Keep it very short.'
-        : 'Be snarky and playful. Keep it short.';
-    const sysFull = sysBase + '\n\n' + timeCtx + webContext + '\n\n' + toneRule + ' Max 2 very short sentences (~20 words).\n\nUser name: ' + profile.name;
-    const messages = [{ role: 'system', content: sysFull }, ...conversationHistory];
-
-    try {
-        const response = await fetch(CONFIG.apiEndpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ messages }) });
-        if (!response.ok) throw new Error('API error');
-        const data = await response.json();
-        let reply = data.reply || "I didn't catch that!";
-
-        // Check for web search request (non-weather queries)
-        if (reply.includes('WEB_SEARCH:')) {
-            const m = reply.match(/WEB_SEARCH:\s*(.+)/);
-            if (m) {
-                const query = m[1].trim();
-                reply = reply.replace(/WEB_SEARCH:.*$/s, '').trim();
-                if (reply) addMessage('ashlyn', reply);
-                setStatus('🔍 Searching: ' + query + '...');
-                const webRes = await fetch(CONFIG.webEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query }) });
-                if (webRes.ok) {
-                    const webData = await webRes.json();
-                    // Faster: avoid a second AI round-trip
-                    const summary = (webData.summary || '').trim();
-                    if (summary) reply = summary.split(/[.!?]\s/)[0] + '.';
-                }
-            }
+        const cmd = detectOpenCommand(text);
+        if (cmd) {
+            openWebView(cmd);
+            return;
         }
 
-        // Open web page if requested
-        if (reply.includes('OPEN_WEB:')) {
-            const m = reply.match(/OPEN_WEB:\s*(https?:\/\/[^\s]+)/);
-            if (m) { const url = m[1].trim(); reply = reply.replace(/OPEN_WEB:.*$/s, '').trim(); openWebView(url); }
-        }
-
-        // Draw image if requested
-        if (reply.includes('DRAW_IMAGE:')) {
-            const m = reply.match(/DRAW_IMAGE:\s*(.+)/);
+        if (looksLikeSiteOnlyUtterance(text)) {
+            const m = detectMentionedSite(text);
             if (m) {
-                const imgPrompt = m[1].trim();
-                reply = reply.replace(/DRAW_IMAGE:.*$/s, '').trim();
-                if (reply) addMessage('ashlyn', reply);
-                setStatus('🎨 Drawing: ' + imgPrompt.substring(0, 40) + '...');
-                try {
-                    const imgRes = await fetch('/api/image', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: imgPrompt }) });
-                    if (imgRes.ok) {
-                        const imgData = await imgRes.json();
-                        if (imgData.url) {
-                            addImageMessage(imgData.url, imgData.prompt || imgPrompt);
-                            speak('Here is your picture!');
-                        }
-                    }
-                } catch(e) {}
-                conversationHistory.push({ role: 'assistant', content: reply + ' [Generated image: ' + imgPrompt + ']' });
-                isThinking = false;
-                resetFace();
+                pendingOpenUrl = m.url;
+                pendingOpenLabel = m.key;
+                const ask = 'Do you want me to open ' + m.key + '?';
+                addMessage('ashlyn', ask); speak(ask);
                 return;
             }
         }
 
-        conversationHistory.push({ role: 'assistant', content: reply });
-        addMessage('ashlyn', reply);
-        isThinking = false;
-        speak(reply);
-    } catch(error) {
-        isThinking = false;
-        const fb = ["Hi! I'm here. Try again!","Oops, brain trouble. Try again!","Didn't catch that!"][Math.floor(Math.random()*3)];
-        addMessage('ashlyn', fb); speak(fb);
-        setStatus('Tap Ashlyn to talk');
-        document.getElementById('ashlynFace').className = 'ashlyn-face idle';
+        conversationHistory.push({ role: 'user', content: text });
+        if (conversationHistory.length > 6) conversationHistory = conversationHistory.slice(-6);
+        isThinking = true;
+        setFaceState('thinking');
+        setStatus('🤔 Ashlyn is thinking...');
+        callAI(text);
     }
-}
 
-// ===== WEB VIEW =====
-function resumeListeningSoon(delay = 350) {
-    if (!voiceSupported || isSpeaking || isThinking || isListening) return;
-    setTimeout(() => {
-        if (!document.hidden && !isSpeaking && !isThinking && !isListening) {
-            startContinuousListening();
-        }
-    }, delay);
-}
+    function detectOpenCommand(text) {
+        const lower = normalizeSpeech(text);
+        if (!lower) return null;
 
-function openWebView(url) {
-    if (!url) return;
+        const intentWords = ['open','go to','go','take me','show me','visit','launch','start','play','watch','pull up','bring up'];
+        const hasOpenIntent = intentWords.some(w => new RegExp('\\b' + w.replace(/\s+/g, '\\s+') + '\\b').test(lower));
+        const m = detectMentionedSite(lower);
 
-    // Stop listening before opening website
-    if (isListening) stopContinuousListening();
+        if (hasOpenIntent && m) return m.url;
 
-    const webView = document.getElementById('webView');
-    const webFrame = document.getElementById('webFrame');
-    const webTopStrip = document.getElementById('webTopStrip');
-    const webExternalNotice = document.getElementById('webExternalNotice');
-    const webExternalBtn = document.getElementById('webExternalBtn');
-    if (!webView || !webFrame) return;
+        const match = lower.match(/^(?:can you\s+|please\s+|ashlyn\s+)?(?:open|go to|go|take me to|show me|visit|launch|start|play|watch|pull up|bring up)\b\s+(.+)/);
+        if (!match) return null;
 
-    let safeUrl = url;
-    if (!/^https?:\/\//i.test(safeUrl)) safeUrl = 'https://' + safeUrl;
+        let site = match[1].trim().replace(/[?.!,]+$/g, '').replace(/^(the|my|a|an)\s+/i, '');
+        site = site.replace(/\s+(for me|please)$/i, '').replace(/\bapp\b/gi, '').trim();
 
-    const host = safeUrl.replace(/^https?:\/\//i, '').split('/')[0].toLowerCase() || safeUrl;
-    const blockedHosts = ['google.', 'youtube.', 'youtu.be', 'googleapis.com', 'bestbuy.'];
-    const externalOnly = blockedHosts.some(h => host.includes(h));
+        if (KNOWN_SITES[site]) return 'https://' + KNOWN_SITES[site];
+        // Only allow free-form domains if they clearly look like a domain (contain a dot)
+        if (site.includes('.')) return site.startsWith('http') ? site : 'https://' + site.replace(/\s+/g, '');
+        // Unknown bare words: do not invent sitename.com — rare kids' words become random .coms
+        return null;
+    }
 
-    webView.classList.add('active');
-    if (webExternalNotice) webExternalNotice.style.display = 'none';
+    // ===== CALL AI =====
+    async function callAI(userText) {
+        const sysBase = CONFIG.systemPrompts[profile.ageGroup] || CONFIG.systemPrompts.adult;
+        const now = new Date();
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+        const offset = -now.getTimezoneOffset() / 60;
+        const offsetStr = offset >= 0 ? 'UTC+' + offset : 'UTC' + offset;
+        const timeCtx = 'Current date/time: ' + now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) +
+            ' at ' + now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) +
+            '. User timezone: ' + tz + ' (' + offsetStr +
+            '). User is in Beaumont, Texas, USA (Southeast Texas, near Houston/Gulf Coast). Use Beaumont, Texas for weather and local info.';
 
-    if (externalOnly) {
-        const siteName = host.includes('youtube') || host.includes('youtu.be')
-            ? 'YouTube'
-            : host.includes('bestbuy')
-                ? 'Best Buy'
-                : 'Google';
-        setStatus('🌐 Opening ' + siteName + ' in Ashlyn mode...');
-        if (webTopStrip) webTopStrip.textContent = siteName + ' safe mode in-app. Tap Ashlyn at bottom to return.';
-        if (webExternalNotice) webExternalNotice.style.display = 'none';
-        if (webExternalBtn) webExternalBtn.onclick = null;
+        const weatherWords = ['weather','temperature','forecast','rain','sunny','cloud','hot','cold','tonight','tomorrow','humidity','wind'];
+        const isWeather = weatherWords.some(w => userText.toLowerCase().includes(w));
 
-        const fallbackHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-            body{margin:0;background:#0a0e27;color:#d6f5ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:18px}
-            .card{max-width:680px;margin:12px auto;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.35);border-radius:16px;padding:16px}
-            h2{margin:0 0 8px;font-size:22px;color:#9fe9ff}
-            p{margin:0 0 12px;color:#c7ebff;line-height:1.4}
-            form{display:flex;gap:8px}
-            input{flex:1;padding:12px;border-radius:12px;border:1px solid rgba(0,212,255,.45);background:#071020;color:#fff;font-size:16px}
-            button{padding:12px 14px;border:none;border-radius:12px;background:#00d4ff;color:#0a0e27;font-weight:700;cursor:pointer}
-            .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-            .chip{background:rgba(0,212,255,.15);color:#9fe9ff;border:1px solid rgba(0,212,255,.35);padding:7px 10px;border-radius:999px;font-size:13px;cursor:pointer}
-            .result{margin-top:14px;padding:12px;border-radius:12px;background:rgba(0,0,0,.25);min-height:80px;white-space:pre-wrap;line-height:1.45}
-            .links{margin-top:10px;display:flex;flex-direction:column;gap:8px}
-            .links a{color:#9fe9ff;text-decoration:underline;word-break:break-all}
-            .small{font-size:12px;opacity:.75;margin-top:10px}
-        </style></head><body>
-            <div class="card">
-                <h2>${siteName} (in-app)</h2>
-                <p>Direct ${siteName} pages cannot be embedded here. This in-app mode still works for local places, directions, and quick web answers.</p>
-                <form id="sForm"><input id="q" autocomplete="off" placeholder="Try: coffee near Beaumont Texas" /><button type="submit">Search</button></form>
-                <div class="chips">
-                    <span class="chip" data-q="coffee near Beaumont Texas">coffee near Beaumont Texas</span>
-                    <span class="chip" data-q="directions to nearest cafe in Beaumont Texas">directions to nearest cafe in Beaumont Texas</span>
-                    <span class="chip" data-q="weather Beaumont Texas">weather Beaumont Texas</span>
-                </div>
-                <div class="result" id="result">Type a search and tap Search.</div>
-                <div class="links" id="links"></div>
-                <div class="small">Links are okay. You can always tap Ashlyn at the bottom to return.</div>
-            </div>
-            <script>
-                const result = document.getElementById('result');
-                const q = document.getElementById('q');
-                const links = document.getElementById('links');
-                function renderLinks(items){
-                    links.innerHTML = '';
-                    (items || []).slice(0,3).forEach(url => {
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.target = '_blank';
-                        a.rel = 'noopener noreferrer';
-                        a.textContent = url;
-                        links.appendChild(a);
-                    });
+        let webContext = '';
+        if (isWeather) {
+            setStatus('🌤️ Checking Texas weather...');
+            try {
+                const webRes = await fetch(CONFIG.webEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: 'weather Beaumont Texas' })
+                });
+                if (webRes.ok) {
+                    const webData = await webRes.json();
+                    if (webData.summary) webContext = '\n\nReal-time weather data:\n' + webData.summary;
                 }
-                async function runSearch(query){
-                    const text = (query||'').trim();
-                    if(!text) return;
-                    result.textContent = 'Searching...';
-                    links.innerHTML = '';
-                    try{
-                        const res = await fetch('/api/web', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query: text })});
-                        if(!res.ok) throw new Error('Search failed');
-                        const data = await res.json();
-                        result.textContent = (data && data.summary) ? data.summary : 'No results right now. Try another search.';
-                        renderLinks(data && data.sources ? data.sources : []);
-                    }catch(e){
-                        result.textContent = 'Could not search right now. Try again in a moment.';
+            } catch (e) {}
+        }
+
+        const toneRule = (profile.ageGroup === 'little' || profile.ageGroup === 'kid')
+            ? 'Be gentle and kind. Never label their question as silly. Always try to help. Keep it very short.'
+            : 'Be snarky and playful. Keep it short.';
+        const sysFull = sysBase + '\n\n' + timeCtx + webContext + '\n\n' + toneRule +
+            ' Max 2 very short sentences (~30 words).\n\n' + CONFIG.toolRules +
+            '\n\nUser name: ' + profile.name;
+
+        const messages = [{ role: 'system', content: sysFull }, ...conversationHistory];
+
+        try {
+            const response = await fetch(CONFIG.apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages })
+            });
+            if (!response.ok) throw new Error('API error');
+            const data = await response.json();
+            let reply = data.reply || "I didn't catch that!";
+
+            // Non-weather web search requested by model
+            if (reply.includes('WEB_SEARCH:')) {
+                const m = reply.match(/WEB_SEARCH:\s*(.+)/);
+                if (m) {
+                    const query = m[1].trim().replace(/\n[\s\S]*/, '');
+                    reply = reply.replace(/WEB_SEARCH:.*$/s, '').trim();
+                    if (reply) addMessage('ashlyn', reply);
+                    setStatus('🔍 Searching: ' + query + '...');
+                    try {
+                        const webRes = await fetch(CONFIG.webEndpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query })
+                        });
+                        if (webRes.ok) {
+                            const webData = await webRes.json();
+                            const summary = (webData.summary || '').trim();
+                            if (summary) {
+                                // One short natural sentence for voice
+                                const first = summary.split(/(?<=[.!?])\s+/)[0];
+                                reply = first && first.length > 10 ? first : summary.slice(0, 180);
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            // Ignore any leftover OPEN_WEB model tokens — we open from user speech instead
+            if (reply.includes('OPEN_WEB:')) {
+                reply = reply.replace(/OPEN_WEB:.*$/s, '').trim();
+            }
+
+            // Draw image if requested
+            if (reply.includes('DRAW_IMAGE:')) {
+                const m = reply.match(/DRAW_IMAGE:\s*(.+)/);
+                if (m) {
+                    const imgPrompt = m[1].trim().replace(/\n[\s\S]*/, '');
+                    reply = reply.replace(/DRAW_IMAGE:.*$/s, '').trim();
+                    if (reply) {
+                        addMessage('ashlyn', reply);
+                        if (!reply.includes('picture') && !reply.includes('Drawing')) {
+                            // still speak the short intro if present
+                        }
+                    } else {
+                        reply = 'Drawing that for you!';
+                        addMessage('ashlyn', reply);
                     }
+                    setStatus('🎨 Drawing: ' + imgPrompt.substring(0, 40) + '...');
+                    speak(reply || 'Here is your picture!');
+                    try {
+                        const imgRes = await fetch('/api/image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ prompt: imgPrompt })
+                        });
+                        if (imgRes.ok) {
+                            const imgData = await imgRes.json();
+                            if (imgData.url) {
+                                addImageMessage(imgData.url, imgData.prompt || imgPrompt);
+                                // ensure chat is visible so they can see the picture
+                                toggleChat(true);
+                                if (!isSpeaking) speak('Here is your picture!');
+                            } else {
+                                const fail = "I couldn't draw that one. Try again!";
+                                addMessage('ashlyn', fail);
+                                if (!isSpeaking) speak(fail);
+                            }
+                        }
+                    } catch (e) {
+                        const fail = "I couldn't draw that one. Try again!";
+                        addMessage('ashlyn', fail);
+                        if (!isSpeaking) speak(fail);
+                    }
+                    conversationHistory.push({ role: 'assistant', content: (reply || 'Drew a picture.') + ' [image: ' + imgPrompt + ']' });
+                    isThinking = false;
+                    // Don't resetFace while speaking — onend will
+                    if (!isSpeaking) resetFace();
+                    return;
                 }
-                document.getElementById('sForm').addEventListener('submit', (e)=>{ e.preventDefault(); runSearch(q.value); });
-                document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', ()=>{ q.value = c.dataset.q; runSearch(q.value); }));
-            <\/script>
-        </body></html>`;
+            }
 
-        webFrame.src = 'about:blank';
-        webFrame.srcdoc = fallbackHtml;
+            conversationHistory.push({ role: 'assistant', content: reply });
+            addMessage('ashlyn', reply);
+            isThinking = false;
+            speak(reply);
+        } catch (error) {
+            isThinking = false;
+            const fb = ["Hi! I'm here. Try again!", "Oops, brain trouble. Try again!", "Didn't catch that!"][Math.floor(Math.random() * 3)];
+            addMessage('ashlyn', fb);
+            speak(fb);
+            setStatus('Tap Ashlyn to talk');
+            setFaceState('idle');
+        }
+    }
+
+    // ===== OPEN WEBSITES (new tab — never iframe) =====
+    function resumeListeningSoon(delay) {
+        delay = typeof delay === 'number' ? delay : 450;
+        if (!voiceSupported || isSpeaking || isThinking || isListening) return;
+        if (document.getElementById('chatContainer').classList.contains('active')) return;
+        setTimeout(() => {
+            if (!document.hidden && !isSpeaking && !isThinking && !isListening) {
+                if (!document.getElementById('chatContainer').classList.contains('active')) {
+                    startContinuousListening();
+                }
+            }
+        }, delay);
+    }
+
+    function openWebView(url) {
+        if (!url) return;
+        if (isListening) stopContinuousListening({ reason: 'open-web' });
+
+        let safeUrl = url;
+        if (!/^https?:\/\//i.test(safeUrl)) safeUrl = 'https://' + safeUrl;
+
+        const host = safeUrl.replace(/^https?:\/\//i, '').split('/')[0].toLowerCase() || safeUrl;
+        setStatus('🌐 Opening ' + host + ' in a new tab...');
+        addMessage('ashlyn', 'Opening ' + host + ' in a new tab.');
         speak('Opening it now.');
-        return;
+
+        // Real new-tab open (works for YouTube/Google; avoids blocked iframes)
+        let opened = null;
+        try {
+            opened = window.open(safeUrl, '_blank', 'noopener,noreferrer');
+        } catch (e) {
+            opened = null;
+        }
+
+        if (!opened) {
+            // Popup blocked — force a visible anchor click (often allowed after user gesture;
+            // for voice path, may still fail; offer Type chat note)
+            try {
+                const a = document.createElement('a');
+                a.href = safeUrl;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e2) {}
+            setStatus('Open was blocked — tap Type and try again, or allow popups.');
+        }
+
+        // Stay with Ashlyn; restart listening after brief pause
+        setFaceState('idle');
+        resumeListeningSoon(1200);
     }
 
-    setStatus('🌐 Opening ' + host + '...');
-    if (webTopStrip) webTopStrip.textContent = 'Opening ' + host + '... Tap Ashlyn at bottom to return.';
-    webFrame.removeAttribute('srcdoc');
-    webFrame.src = safeUrl;
-    speak('Opening it now.');
-}
-
-function closeWebView() {
-    const webView = document.getElementById('webView');
-    const webFrame = document.getElementById('webFrame');
-    const webTopStrip = document.getElementById('webTopStrip');
-    const webExternalNotice = document.getElementById('webExternalNotice');
-    const webExternalBtn = document.getElementById('webExternalBtn');
-    if (!webView || !webFrame) return;
-
-    webView.classList.remove('active');
-    webFrame.removeAttribute('srcdoc');
-    webFrame.src = 'about:blank';
-    if (webTopStrip) webTopStrip.textContent = 'Loading site... Tap Ashlyn at bottom to return.';
-    if (webExternalNotice) webExternalNotice.style.display = 'none';
-    if (webExternalBtn) webExternalBtn.onclick = null;
-
-    setStatus('Back to Ashlyn! 🎉');
-    document.getElementById('ashlynFace').className = 'ashlyn-face idle';
-    resumeListeningSoon(300);
-}
-
-// ===== CHAT =====
-function addMessage(sender, text) {
-    const c = document.getElementById('chatMessages');
-    const m = document.createElement('div');
-    m.className = 'message ' + sender;
-    m.textContent = text;
-    c.appendChild(m); c.scrollTop = c.scrollHeight;
-}
-function addImageMessage(url, caption) {
-    const c = document.getElementById('chatMessages');
-    const wrapper = document.createElement('div');
-    wrapper.className = 'message ashlyn';
-    wrapper.style.padding = '5px';
-    const img = document.createElement('img');
-    img.src = url;
-    img.style.cssText = 'width:100%;max-width:300px;border-radius:12px;display:block;';
-    img.alt = caption;
-    wrapper.appendChild(img);
-    if (caption) {
-        const cap = document.createElement('div');
-        cap.style.cssText = 'font-size:12px;color:rgba(0,212,255,0.6);margin-top:5px;';
-        cap.textContent = caption;
-        wrapper.appendChild(cap);
-    }
-    c.appendChild(wrapper);
-    c.scrollTop = c.scrollHeight;
-}
-function sendTextMessage() { return; } // voice-only mode
-function toggleChat() { return; } // voice-only mode
-function setStatus(t) { document.getElementById('statusText').textContent = t; }
-function resetFace() {
-    isThinking=false; isListening=false; isSpeaking=false;
-    document.getElementById('ashlynFace').className = 'ashlyn-face idle';
-    if (document.getElementById('webView').classList.contains('active')) return;
-    setStatus('Listening...');
-    // Auto-restart listening after Ashlyn finishes talking
-    resumeListeningSoon(450);
-}
-
-// ===== PROFILE =====
-function saveProfile() {
-    unlockSpeech();
-    const name = document.getElementById('nameInput').value.trim() || 'Sweetie';
-    const ageGroup = document.getElementById('ageSelect').value || 'little';
-    profile = { name, ageGroup };
-    try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch(e) {}
-    showMainInterface();
-}
-
-function saveProfileTap() {
-    unlockSpeech();
-    const kidNames = ['Princess','Sweetie','Sunshine','Star'];
-    profile = { name: kidNames[Math.floor(Math.random()*kidNames.length)], ageGroup: 'little' };
-    try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch(e) {}
-    showMainInterface();
-}
-
-function loadProfile() {
-    try { const s = localStorage.getItem('ashlynProfile'); if (s) { profile = JSON.parse(s); return true; } } catch(e) {}
-    return false;
-}
-
-function speakLandingIntro() {
-    const line = "Back so soon? Hit me with a good one.";
-    setTimeout(() => speak(line), 250);
-}
-
-function showMainInterface() {
-    document.getElementById('profileSetup').style.display = 'none';
-    document.getElementById('topBar').style.display = 'flex';
-    document.getElementById('ashlynFace').style.display = 'block';
-    document.getElementById('reactorDot').style.display = 'block';
-    document.getElementById('statusText').style.display = 'block';
-    document.getElementById('hintText').style.display = 'block';
-    document.getElementById('profileName').textContent = profile.name;
-    if (profile.ageGroup === 'little') document.body.classList.add('big-button-mode');
-
-    const greetings = {
-        little: 'Oh hi ' + profile.name + '! It\'s me, Ashlyn! I\'m super smart and kinda awesome. Just talk to me and I\'ll help you with whatever!',
-        kid: 'Hey ' + profile.name + '! Ashlyn here. Yes, THE Ashlyn. I\'m ready to help you with stuff. Just start talking, I\'m listening!',
-        teen: 'Oh great, ' + profile.name + ' needs me. Just kidding, I\'m totally here for you. What\'s up? Talk to me!',
-        adult: 'Oh look who finally showed up. Hey ' + profile.name + '. Ashlyn\'s Brain online. I can search the web, check weather, draw pictures, and roast you. What do you need?'
-    };
-    setStatus(greetings[profile.ageGroup] || greetings.adult);
-    speak(greetings[profile.ageGroup] || greetings.adult);
-    // Auto-start listening after greeting finishes
-    if (voiceSupported) setTimeout(() => startContinuousListening(), 2500);
-    startClock();
-}
-
-function showProfile() {
-    const name = prompt('Current name: ' + profile.name + '\nChange name? (or cancel to keep)', profile.name);
-    if (name && name.trim()) { profile.name = name.trim(); try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch(e) {} document.getElementById('profileName').textContent = profile.name; }
-}
-
-// ===== CLOCK =====
-function startClock() {
-    function update() { const now = new Date(); const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; document.getElementById('clock').textContent = days[now.getDay()] + ' ' + now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
-    update(); setInterval(update, 1000);
-}
-
-// ===== INIT =====
-window.addEventListener('load', () => {
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    initSpeechRecognition();
-
-    // Always begin on landing page
-    document.getElementById('profileSetup').style.display = 'flex';
-
-    // Pre-fill saved profile if available (still keeps landing page first)
-    if (loadProfile() && profile) {
-        document.getElementById('nameInput').value = profile.name || '';
-        document.getElementById('ageSelect').value = profile.ageGroup || '';
+    function closeWebView() {
+        // legacy no-op — iframe webview removed
+        resumeListeningSoon(300);
     }
 
-    // Try speaking a snarky landing line on open
-    speakLandingIntro();
+    // ===== CHAT =====
+    function addMessage(sender, text) {
+        const c = document.getElementById('chatMessages');
+        if (!c || !text) return;
+        const m = document.createElement('div');
+        m.className = 'message ' + sender;
+        m.textContent = text;
+        c.appendChild(m);
+        c.scrollTop = c.scrollHeight;
+    }
+    function addImageMessage(url, caption) {
+        const c = document.getElementById('chatMessages');
+        if (!c || !url) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message ashlyn';
+        wrapper.style.padding = '5px';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'width:100%;max-width:300px;border-radius:12px;display:block;';
+        img.alt = caption || 'Ashlyn drawing';
+        wrapper.appendChild(img);
+        if (caption) {
+            const cap = document.createElement('div');
+            cap.style.cssText = 'font-size:12px;color:rgba(0,212,255,0.6);margin-top:5px;';
+            cap.textContent = caption;
+            wrapper.appendChild(cap);
+        }
+        c.appendChild(wrapper);
+        c.scrollTop = c.scrollHeight;
+    }
+    function sendTextMessage() {
+        const input = document.getElementById('chatInput');
+        const text = (input.value || '').trim();
+        if (!text) return;
+        input.value = '';
+        handleUserMessage(text);
+    }
+    function toggleChat(forceOpen) {
+        const box = document.getElementById('chatContainer');
+        const shouldOpen = forceOpen === true ? true : forceOpen === false ? false : !box.classList.contains('active');
+        if (shouldOpen) {
+            if (isListening) stopContinuousListening({ reason: 'chat' });
+            box.classList.add('active');
+            setTimeout(() => {
+                try { document.getElementById('chatInput').focus(); } catch (e) {}
+            }, 100);
+        } else {
+            box.classList.remove('active');
+            resumeListeningSoon(350);
+        }
+    }
+    function setStatus(t) {
+        const el = document.getElementById('statusText');
+        if (el) el.textContent = t;
+    }
+    function resetFace() {
+        isThinking = false;
+        isListening = false;
+        isSpeaking = false;
+        setFaceState('idle');
+        setStatus('Listening...');
+        // Slightly longer buffer to avoid echo-loop after TTS
+        resumeListeningSoon(700);
+    }
 
-    // If browser blocks autoplay speech, first tap unlocks and speaks it
-    const firstTapIntro = () => {
+    // ===== PROFILE =====
+    function saveProfile() {
         unlockSpeech();
+        const name = document.getElementById('nameInput').value.trim() || 'Sweetie';
+        const ageGroup = document.getElementById('ageSelect').value || 'little';
+        profile = { name, ageGroup };
+        try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch (e) {}
+        showMainInterface();
+    }
+
+    function saveProfileTap() {
+        unlockSpeech();
+        const kidNames = ['Princess', 'Sweetie', 'Sunshine', 'Star'];
+        profile = { name: kidNames[Math.floor(Math.random() * kidNames.length)], ageGroup: 'little' };
+        try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch (e) {}
+        showMainInterface();
+    }
+
+    function loadProfile() {
+        try {
+            const s = localStorage.getItem('ashlynProfile');
+            if (s) { profile = JSON.parse(s); return true; }
+        } catch (e) {}
+        return false;
+    }
+
+    function speakLandingIntro() {
+        const line = "Back so soon? Hit me with a good one.";
+        setTimeout(() => speak(line), 250);
+    }
+
+    function showMainInterface() {
+        document.getElementById('profileSetup').style.display = 'none';
+        document.getElementById('topBar').style.display = 'flex';
+        document.getElementById('ashlynFace').style.display = 'block';
+        document.getElementById('reactorDot').style.display = 'block';
+        document.getElementById('statusText').style.display = 'block';
+        document.getElementById('hintText').style.display = 'block';
+        document.getElementById('profileName').textContent = profile.name;
+        if (profile.ageGroup === 'little') document.body.classList.add('big-button-mode');
+        else document.body.classList.remove('big-button-mode');
+
+        const greetings = {
+            little: 'Oh hi ' + profile.name + '! It\'s me, Ashlyn! I\'m super smart and kinda awesome. Just talk to me and I\'ll help you with whatever!',
+            kid: 'Hey ' + profile.name + '! Ashlyn here. Yes, THE Ashlyn. I\'m ready to help you with stuff. Just start talking, I\'m listening!',
+            teen: 'Oh great, ' + profile.name + ' needs me. Just kidding, I\'m totally here for you. What\'s up? Talk to me!',
+            adult: 'Oh look who finally showed up. Hey ' + profile.name + '. Ashlyn\'s Brain online. I can search the web, check weather, draw pictures, and roast you. What do you need?'
+        };
+        setFaceState('speaking');
+        setStatus(greetings[profile.ageGroup] || greetings.adult);
+        speak(greetings[profile.ageGroup] || greetings.adult);
+        // Listening restarts from speak onend → resetFace. Extra safety kick:
+        if (voiceSupported) setTimeout(() => {
+            if (!isSpeaking && !isListening && !isThinking) startContinuousListening();
+        }, 5500);
+        startClock();
+    }
+
+    function showProfile() {
+        const name = prompt('Current name: ' + profile.name + '\nChange name? (or cancel to keep)', profile.name);
+        if (name && name.trim()) {
+            profile.name = name.trim();
+            try { localStorage.setItem('ashlynProfile', JSON.stringify(profile)); } catch (e) {}
+            document.getElementById('profileName').textContent = profile.name;
+        }
+    }
+
+    // ===== CLOCK =====
+    function startClock() {
+        function update() {
+            const now = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            document.getElementById('clock').textContent =
+                days[now.getDay()] + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+        update();
+        setInterval(update, 1000);
+    }
+
+    // ===== INIT =====
+    window.addEventListener('load', () => {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        initSpeechRecognition();
+
+        // Always begin on landing page
+        document.getElementById('profileSetup').style.display = 'flex';
+
+        if (loadProfile() && profile) {
+            document.getElementById('nameInput').value = profile.name || '';
+            document.getElementById('ageSelect').value = profile.ageGroup || '';
+        }
+
         speakLandingIntro();
-        document.removeEventListener('touchstart', firstTapIntro);
-        document.removeEventListener('click', firstTapIntro);
-    };
-    document.addEventListener('touchstart', firstTapIntro, { passive: true });
-    document.addEventListener('click', firstTapIntro);
 
-    document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+        const firstTapIntro = () => {
+            unlockSpeech();
+            speakLandingIntro();
+            document.removeEventListener('touchstart', firstTapIntro);
+            document.removeEventListener('click', firstTapIntro);
+        };
+        document.addEventListener('touchstart', firstTapIntro, { passive: true });
+        document.addEventListener('click', firstTapIntro);
 
-    // Recover cleanly if user leaves a web page and comes back
-    window.addEventListener('pageshow', () => {
-        const webActive = document.getElementById('webView').classList.contains('active');
-        if (!webActive) {
-            document.getElementById('ashlynFace').className = 'ashlyn-face idle';
-            setStatus('Listening...');
-            resumeListeningSoon(350);
-        }
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('pageshow', () => {
+            if (profile && document.getElementById('profileSetup').style.display === 'none') {
+                setFaceState('idle');
+                setStatus('Listening...');
+                resumeListeningSoon(350);
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (isListening) stopContinuousListening({ reason: 'hidden' });
+                return;
+            }
+            if (profile && document.getElementById('profileSetup').style.display === 'none') {
+                setFaceState('idle');
+                setStatus('Listening...');
+                resumeListeningSoon(350);
+            }
+        });
     });
 
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (isListening) stopContinuousListening();
-            return;
-        }
-        const webActive = document.getElementById('webView').classList.contains('active');
-        if (!webActive) {
-            document.getElementById('ashlynFace').className = 'ashlyn-face idle';
-            setStatus('Listening...');
-            resumeListeningSoon(350);
-        }
-    });
-});
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-</script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+    </script>
 </body>
 </html>
