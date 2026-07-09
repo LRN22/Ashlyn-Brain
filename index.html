@@ -170,6 +170,11 @@
       display: block; width: 100%; margin-bottom: 10px; padding: 16px; border: 0; border-radius: 16px;
       background: var(--cyan); color: #041018; font-size: 20px; font-weight: 900; cursor: pointer;
     }
+    #openModal .copy {
+      display: block; width: 100%; margin-bottom: 10px; padding: 14px; border-radius: 16px;
+      border: 2px solid rgba(0,255,136,.5); background: rgba(0,255,136,.12); color: #d7ffe9;
+      font-size: 17px; font-weight: 900; cursor: pointer;
+    }
     #openModal .no {
       display: block; width: 100%; padding: 12px; border-radius: 14px;
       border: 1px solid rgba(0,212,255,.4); background: transparent; color: var(--muted);
@@ -207,7 +212,7 @@
 <body>
   <!-- LANDING -->
   <div id="landing">
-    <img src="ashlyn-face.png?v=simple2" alt="Moof" />
+    <img src="ashlyn-face.png?v=simple3" alt="Moof" />
     <h1>Moof</h1>
     <p>I'm Moof — Ashlyn's Brain. Tap the big button, talk, and I'll answer. Simple.</p>
     <input id="nameInput" maxlength="20" placeholder="Your name" autocomplete="nickname" />
@@ -231,7 +236,7 @@
 
     <div class="stage">
       <div class="face-wrap idle" id="face" role="button" aria-label="Tap Moof to talk">
-        <img src="ashlyn-face.png?v=simple2" alt="Moof" />
+        <img src="ashlyn-face.png?v=simple3" alt="Moof" />
         <div class="mouth" aria-hidden="true"></div>
       </div>
       <div class="status" id="status">Tap HOLD TO TALK, then speak</div>
@@ -251,6 +256,7 @@
       <h3 id="openTitle">Open site?</h3>
       <p id="openMsg">Opens in Safari/a new tab. Moof stays here — use the app icon or this tab to come back.</p>
       <button class="go" id="openGo" type="button">Open site</button>
+      <button class="copy" id="openCopy" type="button">Copy link (for Safari)</button>
       <button class="no" id="openNo" type="button">Stay with Moof</button>
     </div>
   </div>
@@ -271,6 +277,10 @@
 
   // ===== Tiny foolproof Moof =====
   const $ = (id) => document.getElementById(id);
+  const UA = navigator.userAgent || '';
+  const IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const IS_CHROME_IOS = IS_IOS && /CriOS/i.test(UA);
+  const IS_SAFARI_IOS = IS_IOS && /Safari/i.test(UA) && !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome/i.test(UA);
   const landing = $('landing');
   const app = $('app');
   const face = $('face');
@@ -385,8 +395,16 @@
     pendingUrl = url;
     pendingLabel = label || 'site';
     $('openTitle').textContent = 'Open ' + pendingLabel + '?';
-    $('openMsg').textContent =
-      'Opens outside Moof (new tab / Safari). Moof stays here. Come back: tap Moof on your Home Screen, or switch back to this tab.';
+    if (IS_CHROME_IOS) {
+      $('openMsg').textContent =
+        'You are in Chrome on iPhone. Chrome keeps websites inside Chrome — it cannot force Safari. Tip: open Moof in Safari and Add to Home Screen for best use. Or Open site (Chrome tab), or Copy link and paste in Safari.';
+    } else if (IS_IOS) {
+      $('openMsg').textContent =
+        'Opens in a new tab/Safari. Moof stays here. Come back: Home Screen Moof icon or this tab.';
+    } else {
+      $('openMsg').textContent =
+        'Opens in a new browser tab. Moof stays here — switch back to this tab anytime.';
+    }
     openModal.classList.add('on');
     openModal.setAttribute('aria-hidden', 'false');
   }
@@ -410,9 +428,31 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('on'), ms || 3200);
   }
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (_) {
+      return false;
+    }
+  }
   function openExternal(url) {
-    // Prefer new tab/window so Moof page stays in memory (much easier to return).
-    // Never use location.href as first choice — that replaces the app.
+    // iOS Chrome cannot hand off to Safari from a webpage — OS restriction.
+    // Prefer a new tab/window so Moof stays loaded for easy return.
     let opened = null;
     try {
       opened = window.open(url, '_blank', 'noopener,noreferrer');
@@ -432,7 +472,7 @@
         opened = null;
       }
     }
-    // Only as absolute last resort — store return flag then navigate
+    // Absolute last resort only
     if (!opened) {
       try { sessionStorage.setItem('moofReturn', '1'); } catch (_) {}
       window.location.assign(url);
@@ -824,9 +864,27 @@
     hiddenAt = Date.now();
     openExternal(url);
     setStatus('Opened ' + label + ' — come back to Moof when done');
-    setReply('Opened ' + label + '. Tap home screen Moof icon (or this tab) to return.');
+    if (IS_CHROME_IOS) {
+      setReply('Opened ' + label + ' in Chrome. Switch back to this Moof tab, or use Home Screen if installed.');
+      showToast('Opened in Chrome tab — Moof is still here', 2800);
+    } else {
+      setReply('Opened ' + label + '. Tap home screen Moof icon (or this tab) to return.');
+      showToast('Site opened — Moof is still here', 2600);
+    }
     showAwayBar(label);
-    showToast('Safari/tab opened — Moof is still here', 2600);
+  };
+  $('openCopy').onclick = async () => {
+    if (!pendingUrl) return;
+    const ok = await copyText(pendingUrl);
+    if (ok) {
+      showToast('Link copied — open Safari and paste', 3200);
+      setStatus('Link copied. Open Safari → paste in address bar');
+      setReply((pendingLabel || 'Link') + ' copied. Open Safari, paste, go. Then return to Moof.');
+    } else {
+      setStatus(pendingUrl, true);
+      setReply('Copy failed — long-press this link and copy: ' + pendingUrl);
+      showToast('Could not auto-copy — see link in reply', 3200);
+    }
   };
   $('openNo').onclick = () => {
     hideOpen();
@@ -877,8 +935,12 @@
         app.classList.add('on');
         setFace('idle');
         setStatus('Welcome back, ' + profile.name + '!');
-        setReply('Moof is ready. Hold to talk or type below.');
-        hintEl.textContent = 'Hold the big button while you talk, then release.';
+        setReply(IS_CHROME_IOS
+          ? 'Moof is ready. Chrome tip: for least bugs, open Moof in Safari → Share → Add to Home Screen.'
+          : 'Moof is ready. Hold to talk or type below.');
+        hintEl.textContent = IS_CHROME_IOS
+          ? 'Chrome works. Safari Home Screen is easier for sites + mic.'
+          : 'Hold the big button while you talk, then release.';
       }
     }
   } catch (_) {}

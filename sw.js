@@ -1,5 +1,5 @@
 // Moof simple shell — network-first HTML so return/refresh isn't stale
-const CACHE_NAME = 'moof-simple-v2';
+const CACHE_NAME = 'moof-simple-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.png', './icon.svg', './ashlyn-face.png'];
 
 self.addEventListener('install', (e) => {
