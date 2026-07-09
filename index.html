@@ -48,6 +48,19 @@
       border-radius: 18px; border: 1px solid rgba(0,212,255,.5);
       background: rgba(0,0,0,.4); color: #fff; font-size: 18px; font-weight: 700; text-align: center;
     }
+    .btn-speak {
+      width: min(100%, 340px); margin: 0 0 14px; padding: 16px 18px; border: 0; border-radius: 18px;
+      background: #18c46a; color: #041810; font-size: 20px; font-weight: 900; cursor: pointer;
+      box-shadow: 0 0 0 3px rgba(24,196,106,.25);
+      animation: pulseHear 1.6s ease-in-out infinite;
+    }
+    .btn-speak.said {
+      background: rgba(24,196,106,.25); color: #b8ffd6; box-shadow: none; animation: none;
+    }
+    @keyframes pulseHear {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
     .btn-primary {
       width: min(100%, 340px); padding: 16px 18px; border: 0; border-radius: 18px;
       background: var(--cyan); color: #041018; font-size: 20px; font-weight: 900; cursor: pointer;
@@ -214,10 +227,11 @@
 <body>
   <!-- LANDING -->
   <div id="landing">
-    <img src="ashlyn-face.png?v=simple5" alt="Moof" id="landingFace" />
+    <img src="ashlyn-face.png?v=simple6" alt="Moof" id="landingFace" />
     <h1>Moof</h1>
     <p id="landingLine">I am Moof, Ashlyn's Brain and ruler of the World.</p>
-    <p class="landing-sub" id="landingSub">Tap my face to hear me — then Let's Go.</p>
+    <p class="landing-sub" id="landingSub">Safari needs one tap for sound.</p>
+    <button class="btn-speak" id="hearBtn" type="button">🔊 Tap to hear Moof</button>
     <input id="nameInput" maxlength="20" placeholder="Your name" autocomplete="nickname" />
     <select id="ageSelect">
       <option value="little">3–7 years</option>
@@ -343,21 +357,16 @@
   const MOOF_LANDING_LINE = "I am Moof, Ashlyn's Brain and ruler of the World.";
   let moofVoice = null;
   let landingSpoken = false;
+  let speechUnlocked = false;
 
-  function unlockSpeech() {
-    try {
-      if (!window.speechSynthesis) return;
-      window.speechSynthesis.resume();
-      const u = new SpeechSynthesisUtterance('');
-      u.volume = 0;
-      window.speechSynthesis.speak(u);
-    } catch (_) {}
+  function getVoicesSafe() {
+    try { return window.speechSynthesis ? (window.speechSynthesis.getVoices() || []) : []; }
+    catch (_) { return []; }
   }
 
   function pickMoofVoice() {
-    const voices = (window.speechSynthesis && window.speechSynthesis.getVoices()) || [];
+    const voices = getVoicesSafe();
     if (!voices.length) return null;
-    // Prefer deep / male English voices (iOS + Android names)
     const prefer = [
       /Daniel/i, /Alex/i, /Fred/i, /Tom/i, /Arthur/i, /Aaron/i, /Gordon/i,
       /Google US English Male/i, /Google UK English Male/i,
@@ -365,61 +374,141 @@
       /Male/i, /Rishi/i, /Oliver/i
     ];
     for (const re of prefer) {
-      const hit = voices.find(v => re.test(v.name) && (!v.lang || v.lang.startsWith('en')));
+      const hit = voices.find(v => re.test(v.name) && (!v.lang || String(v.lang).startsWith('en')));
       if (hit) return hit;
     }
-    // Avoid known female defaults if a generic en voice exists
-    const en = voices.filter(v => v.lang && v.lang.startsWith('en'));
-    const notFem = en.find(v => !/Samantha|Karen|Moira|Tessa|Zoe|Female|siri.*female|Victoria|Fiona|Kyoko/i.test(v.name));
+    const en = voices.filter(v => v.lang && String(v.lang).startsWith('en'));
+    const notFem = en.find(v => !/Samantha|Karen|Moira|Tessa|Zoe|Female|Victoria|Fiona|Kyoko/i.test(v.name));
     return notFem || en[0] || voices[0];
+  }
+
+  // Must run inside a user-gesture handler on iOS Safari (tap).
+  function unlockSpeechSync() {
+    if (!window.speechSynthesis) return false;
+    try {
+      window.speechSynthesis.resume();
+      // Do NOT speak a dummy+cancel race on iOS during the same gesture —
+      // just mark unlocked and speak the real line immediately.
+      speechUnlocked = true;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function markHearButton(said) {
+    const b = $('hearBtn');
+    if (!b) return;
+    if (said) {
+      b.classList.add('said');
+      b.textContent = '🔊 Heard Moof — tap again anytime';
+    } else {
+      b.classList.remove('said');
+      b.textContent = '🔊 Tap to hear Moof';
+    }
   }
 
   function speak(text, opts) {
     opts = opts || {};
     return new Promise((resolve) => {
-      if (!window.speechSynthesis || !text) { resolve(); return; }
-      try { window.speechSynthesis.cancel(); } catch (_) {}
-      unlockSpeech();
+      if (!window.speechSynthesis || !text) {
+        resolve(false);
+        return;
+      }
+      try { window.speechSynthesis.resume(); } catch (_) {}
+      // Only cancel if already speaking; cancel+speak in same tick is flaky on iOS
+      try {
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+          window.speechSynthesis.cancel();
+        }
+      } catch (_) {}
+
       const u = new SpeechSynthesisUtterance(text);
-      // Male cat: lower pitch, slightly slower for weight
       const little = profile && profile.ageGroup === 'little';
       u.rate = opts.rate != null ? opts.rate : (little ? 0.9 : 0.95);
-      u.pitch = opts.pitch != null ? opts.pitch : 0.78; // deeper than default 1.0
+      u.pitch = opts.pitch != null ? opts.pitch : 0.78;
       u.volume = 1;
       moofVoice = pickMoofVoice() || moofVoice;
-      if (moofVoice) u.voice = moofVoice;
+      if (moofVoice) {
+        try { u.voice = moofVoice; } catch (_) {}
+      }
+
       let done = false;
-      const finish = () => {
+      const finish = (ok) => {
         if (done) return;
         done = true;
-        if (!opts.keepFace) setFace('idle');
-        resolve();
+        if (!opts.keepFace && face && face.style.display !== 'none') setFace('idle');
+        resolve(!!ok);
       };
-      u.onstart = () => { if (!opts.quietFace) setFace('speaking'); };
-      u.onend = finish;
-      u.onerror = finish;
-      if (!opts.quietFace) setFace('speaking');
-      try { window.speechSynthesis.speak(u); } catch (_) { finish(); return; }
+
+      u.onstart = () => {
+        speechUnlocked = true;
+        if (!opts.quietFace && app && app.classList.contains('on')) setFace('speaking');
+      };
+      u.onend = () => finish(true);
+      u.onerror = () => finish(false);
+
+      // Kick speaking SYMCHRONOUSLY from the call stack (gesture-safe)
+      try {
+        window.speechSynthesis.speak(u);
+        // iOS sometimes parks utterances until resume:
+        try { window.speechSynthesis.resume(); } catch (_) {}
+      } catch (e) {
+        console.error('speak failed', e);
+        finish(false);
+        return;
+      }
+
+      // Failsafe: if onstart never fires, still end promise
       setTimeout(() => {
-        if (!done && !window.speechSynthesis.speaking) finish();
-      }, Math.min(18000, 1400 + text.length * 70));
+        if (!done) {
+          if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            // still going — wait a bit more
+            setTimeout(() => { if (!done) finish(true); }, 8000);
+          } else {
+            finish(false);
+          }
+        }
+      }, Math.min(16000, 1600 + text.length * 75));
     });
   }
 
-  async function speakLandingIntro(force) {
-    if (!force && landingSpoken) return;
-    unlockSpeech();
-    landingSpoken = true;
-    // On pure landing, face element may be hidden — still speak
+  // Call ONLY from a real tap/pointer handler.
+  async function speakLandingIntro(fromGesture) {
+    if (!fromGesture) {
+      // iOS Safari blocks this path — show the button instead of failing silently
+      markHearButton(false);
+      const sub = $('landingSub');
+      if (sub) sub.textContent = 'Tap the green button (or my face) to hear me.';
+      return false;
+    }
+    unlockSpeechSync();
     try {
       const img = $('landingFace');
-      if (img) img.style.filter = 'drop-shadow(0 0 22px rgba(0,255,136,.7))';
+      if (img) img.style.filter = 'drop-shadow(0 0 22px rgba(0,255,136,.75))';
     } catch (_) {}
-    await speak(MOOF_LANDING_LINE, { pitch: 0.72, rate: 0.92 });
+    const sub = $('landingSub');
+    if (sub) sub.textContent = 'Speaking…';
+    markHearButton(false);
+
+    // Prefer fresh male voice after click/voices load
+    moofVoice = pickMoofVoice();
+    const ok = await speak(MOOF_LANDING_LINE, { pitch: 0.72, rate: 0.92, quietFace: true });
+    landingSpoken = !!ok;
     try {
       const img = $('landingFace');
       if (img) img.style.filter = '';
     } catch (_) {}
+    if (ok) {
+      markHearButton(true);
+      if (sub) sub.textContent = 'Nice. Enter your name, then Let\'s Go.';
+      showToast('😺 Moof has spoken', 2200);
+    } else {
+      markHearButton(false);
+      if (sub) sub.textContent = 'No sound? Unmute phone, turn off silent switch, tap again.';
+      showToast('No sound — unmute iPhone, then tap again', 3600);
+    }
+    return ok;
   }
 
   function tickClock() {
@@ -479,11 +568,9 @@
     } catch (_) {}
     if (msg) showToast(msg, 3000);
     landingSpoken = false;
-    // Next tap on landing can play his line again
-    landing.addEventListener('pointerdown', () => {
-      unlockSpeech();
-      speakLandingIntro(false);
-    }, { once: true });
+    markHearButton(false);
+    const sub = $('landingSub');
+    if (sub) sub.textContent = 'Tap the green button to hear Moof.';
   }
 
   function hardRefreshToStart() {
@@ -607,7 +694,7 @@
     stopAllMedia();
     hideOpen();
     setFace('idle');
-    unlockSpeech();
+    unlockSpeechSync();
     tickClock();
 
     // If user was gone to YouTube/etc and came back, force a true refresh to the start page.
@@ -766,7 +853,7 @@
 
   async function startRecord() {
     if (busy || recording) return;
-    unlockSpeech();
+    unlockSpeechSync();
     try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -888,7 +975,7 @@
   }
 
   async function startApp(name, ageGroup) {
-    unlockSpeech();
+    unlockSpeechSync();
     profile = { name: name || 'Friend', ageGroup: ageGroup || 'kid' };
     try { localStorage.setItem('moofProfile', JSON.stringify(profile)); } catch (_) {}
     $('whoName').textContent = profile.name;
@@ -1081,37 +1168,28 @@
   function refreshMoofVoice() {
     moofVoice = pickMoofVoice();
   }
-  window.speechSynthesis && window.speechSynthesis.getVoices();
+  try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch (_) {}
   if (window.speechSynthesis) {
     window.speechSynthesis.onvoiceschanged = () => refreshMoofVoice();
   }
   refreshMoofVoice();
 
-  // Landing: iOS only speaks after a gesture — tap Moof face (or first tap) plays intro
-  const landingFace = $('landingFace');
-  if (landingFace) {
-    landingFace.addEventListener('click', (e) => {
+  function wireLandingSpeak(el) {
+    if (!el) return;
+    // Use pointerup + click: iOS is fussy; pointerup is still a gesture.
+    const go = (e) => {
       e.preventDefault();
-      unlockSpeech();
-      landingSpoken = false; // allow replay when they tap face
+      e.stopPropagation();
+      unlockSpeechSync();
       speakLandingIntro(true);
-    });
+    };
+    el.addEventListener('click', go);
   }
-  // First interaction unlock on landing; auto-play the regal line once
-  const firstGesture = () => {
-    if (landing.style.display === 'none') return;
-    unlockSpeech();
-    speakLandingIntro(false);
-  };
-  landing.addEventListener('pointerdown', firstGesture, { once: true });
-  // Small delayed unlock after open (works if browser allows; Safari still needs tap often)
-  setTimeout(() => {
-    refreshMoofVoice();
-    if (landing.style.display !== 'none' && !landingSpoken) {
-      // Soft try; if silent, face tip text already tells them to tap
-      try { unlockSpeech(); } catch (_) {}
-    }
-  }, 400);
+  wireLandingSpeak($('hearBtn'));
+  wireLandingSpeak($('landingFace'));
+
+  // Reminder: never rely on autoplay for Safari
+  markHearButton(false);
 
   tickClock();
   setInterval(tickClock, 1000);
